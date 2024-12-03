@@ -1,12 +1,6 @@
-// Code developed by Nikhil Challa as part of ML in IOT Course - year : 2022
-// Team members : Simon Erlandsson
-// To get full understanding of the code, please refer to below document in git
-// https://github.com/niil87/Machine-Learning-for-IOT---Fall-2022-Batch-Lund-University/blob/main/Math_for_Understanding_Deep_Neural_Networks.pdf
-// The equations that corresponds to specific code will be listed in the comments next to code
-
 #define fRAND ( rand()*1.0/RAND_MAX-0.5 )*2   // random number generator between -1 and +1 
 #define ACT(a) max(a,0)    // RELU(a)
-
+#define DEBUG 1
 
 #ifdef DATA_TYPE_FLOAT 
   #define DATA_TYPE float
@@ -104,7 +98,7 @@ neuron createNeuron(int numInput) {
 	N1.W = (DATA_TYPE*)calloc(numInput, sizeof(DATA_TYPE));
 	N1.dW = (DATA_TYPE*)calloc(numInput, sizeof(DATA_TYPE));
 	// initializing values of W to rand and dW to 0
-	//int Sum = 0;
+	// int Sum = 0;
 	for (int i = 0; i < numInput; i++) {
 		N1.W[i] = fRAND;
 		N1.dW[i] = 0.0;
