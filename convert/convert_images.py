@@ -3,7 +3,7 @@ import numpy as np
 import os
 import random
 
-def convert_images_to_arrays(image_dir, label, img_size=(5, 15)):
+def convert_images_to_arrays(image_dir, label, img_size=(24, 24)):
     print(len(os.listdir(image_dir)))
     data = []
     labels = []
