@@ -1,5 +1,5 @@
 // Data file
-const int first_layer_input_cnt = 75;
+const int first_layer_input_cnt = 576;
 const int train_data_cnt = 98;
 const int validation_data_cnt = 30; 
 const int test_data_cnt = 12;    

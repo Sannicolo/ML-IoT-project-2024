@@ -4,10 +4,10 @@
 #include<TinyMLShield.h>
 
 // NN parameters, set these yourself! 
-#define LEARNING_RATE 1    // The learning rate used to train your network
+#define LEARNING_RATE 0.01    // The learning rate used to train your network
 #define EPOCH 50             // The maximum number of epochs 
-#define DATA_TYPE_FlOAT      // The data type used: Set this to DATA_TYPE_DOUBLE for higher precision. However, it is better to keep this Float if you want to submit the result via BT
-#define EPOCH_RUN 50 //epochs to run 
+#define DATA_TYPE_FLOAT      // The data type used: Set this to DATA_TYPE_DOUBLE for higher precision. However, it is better to keep this Float if you want to submit the result via BT
+#define EPOCH_RUN 10 //epochs to run 
 extern const int first_layer_input_cnt;
 extern const int classes_cnt;
 
@@ -18,7 +18,7 @@ extern const int classes_cnt;
 // 3. An output layer with as many classes as you defined in the variable classes_cnt in cnn_data.h 
 static const unsigned int NN_def[] = {first_layer_input_cnt, 20, classes_cnt};
 
-#include "data.h"       // The data, labels and the sizes of all objects are stored here 
+#include "data-more-test.h"       // The data, labels and the sizes of all objects are stored here 
 #include "NN_functions.h"   // All NN functions are stored here 
 
 int iter_cnt = 0;           // This keeps track of the number of epochs you've trained on the Arduino
@@ -27,12 +27,6 @@ int iter_cnt = 0;           // This keeps track of the number of epochs you've t
 
 // This function contains your training loop 
 void do_training() {
-
-  // Print the weights if you want to debug 
-#if DEBUG      
-  Serial.println("Now Training");
-  PRINT_WEIGHTS();
-#endif
 
   // Print the epoch number 
   Serial.print("Epoch count (training count): ");
@@ -81,7 +75,11 @@ void setup() {
   Serial.print("The accuracy before training");
   printAccuracy();
   
-  Serial.println("Use the on-shield button to start and stop the loop code ");
+  //Serial.println("Use the on-shield button to start and stop the loop code ");
+  Serial.println("Training the network locally with: " + String(EPOCH_RUN) + " epochs");
+  for (int epoch = 0; epoch < EPOCH_RUN; epoch++){
+  do_training();
+ }
   
 }
 
@@ -89,19 +87,17 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   // see if the button is pressed and turn off or on recording accordingly
-  bool clicked = readShieldButton();
+  /* bool clicked = readShieldButton();
   
   if (clicked){
     
     Serial.println("yes, we clicked the button");
     do_training(); // Local training 
+    do_retraining(); 
     
-  }
+  } */
 
- /* for (int epoch = 0; epoch < EPOCH_RUN; epoch++){
-  Serial.print("Epoch: " + epoch);
-  do_training();
- } */
+ 
  
 
   
