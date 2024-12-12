@@ -11,6 +11,10 @@
 extern const int first_layer_input_cnt;
 extern const int classes_cnt;
 
+byte image[160 * 120 * 2]; // QCIF: 176x144 x 2 bytes per pixel (RGB565)
+float resizedImage[72 * 56];
+int bytesPerFrame;
+
 // You define your network in NN_def
 // Right now, the network consists of three layers: 
 // 1. An input layer with the size of your input as defined in the variable first_layer_input_cnt in cnn_data.h 
@@ -24,6 +28,46 @@ static const unsigned int NN_def[] = {first_layer_input_cnt, 20, classes_cnt};
 int iter_cnt = 0;           // This keeps track of the number of epochs you've trained on the Arduino
 #define DEBUG 0             // This prints the weights of your network in case you want to do debugging (set to 1 if you want to see that)
 
+void convertToGrayscale(byte *image) {
+  Serial.print(image); 
+  for (int i = 0; i < bytesPerFrame; i += 2) {
+    uint16_t pixel = (image[i] << 8) | image[i + 1];
+    uint8_t r = (pixel >> 11) & 0x1F;
+    uint8_t g = (pixel >> 5) & 0x3F;
+    uint8_t b = pixel & 0x1F;
+    uint8_t gray = (r * 299 + g * 587 + b * 114) / 1000;
+    image[i / 2] = gray;
+  }
+}
+
+
+void resizeImage() {
+  int srcWidth = 160;
+  int srcHeight = 120;
+  int destWidth = 72;
+  int destHeight = 56;
+  float xRatio = srcWidth / (float)destWidth;
+  float yRatio = srcHeight / (float)destHeight;
+  for (int y = 0; y < destHeight; y++) {
+    for (int x = 0; x < destWidth; x++) {
+      int srcX = (int)(x * xRatio);
+      int srcY = (int)(y * yRatio);
+      resizedImage[y * destWidth + x] = image[srcY * srcWidth + srcX] / 255.0;
+    }
+  }
+}
+
+
+void printFloatArray() {
+  Serial.print("[");
+  for (int i = 0; i < 72 * 56; i++) {
+    Serial.print(resizedImage[i], 3);
+    if (i != 72 * 56 - 1) {
+      Serial.print(", ");
+    }
+  }
+  Serial.println("]");
+}
 
 // This function contains your training loop 
 void do_training() {
@@ -37,7 +81,7 @@ void do_training() {
   shuffleIndx();
   
   // starting forward + Backward propagation
-  for (int j = 0;j < numTrainData;j++) {
+  for (int j = 0; j < numTrainData;j++) {
     generateTrainVectors(j);  
     forwardProp();
     backwardProp();
@@ -46,6 +90,23 @@ void do_training() {
   Serial.println("Accuracy after local training:");
   printAccuracy();
 
+}
+
+void classifyImage() {
+  for (int i = 0; i < IN_VEC_SIZE; i++) {
+    input[i] = resizedImage[i];
+  }
+
+  forwardProp();
+  int maxIndx = 0;
+  for (int j = 1; j < OUT_VEC_SIZE; j++) {
+    if (y[maxIndx] < y[j]) {
+      maxIndx = j;
+    }
+  }
+
+  Serial.print("Classified class: ");     // 0 = banana, 1 = tomato
+  Serial.println(maxIndx);
 }
 
 
@@ -77,29 +138,41 @@ void setup() {
   
   //Serial.println("Use the on-shield button to start and stop the loop code ");
   Serial.println("Training the network locally with: " + String(EPOCH_RUN) + " epochs");
+
   for (int epoch = 0; epoch < EPOCH_RUN; epoch++){
-  do_training();
- }
-  
+    do_training();
+  }
+
+  //delay(2000);
+
+  if (!Camera.begin(QQVGA, RGB565, 1, OV7675)) {
+    Serial.println("Failed to initialize camera");
+    while (1);
+  }
+  bytesPerFrame = Camera.width() * Camera.height() * Camera.bytesPerPixel();
+
+  Serial.println("Press button to take image\n");
+  //delay(5000);
+
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-  // see if the button is pressed and turn off or on recording accordingly
-  /* bool clicked = readShieldButton();
   
-  if (clicked){
-    
-    Serial.println("yes, we clicked the button");
-    do_training(); // Local training 
-    do_retraining(); 
-    
-  } */
+  bool clicked = readShieldButton();
+
+  if (clicked)
+  {
+    Serial.print("Button clicked\n");
+    Camera.readFrame(image);
+    convertToGrayscale(image);
+    Serial.print("grayscale");
+    resizeImage();
+    Serial.print("after rezise");
+    printFloatArray();
+    classifyImage();
+
+  }
 
  
- 
-
-  
 
 }
