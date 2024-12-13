@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import serial
 
 # Configure the serial port
-ser = serial.Serial('/dev/cu.usbmodem11101', 9600)  # Update with your serial port and baud rate
+ser = serial.Serial('/dev/cu.usbmodem1101', 9600)  # Update with your serial port and baud rate
 
 def read_serial_data():
     data = []

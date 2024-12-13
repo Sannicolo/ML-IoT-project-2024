@@ -60,6 +60,8 @@ layer* L = NULL;
 
 // Weights written to here will be sent/received via bluetooth. 
 DATA_TYPE* WeightBiasPtr = NULL;
+DATA_TYPE* WeightBiasPtr2 = NULL;
+
 
 // Equation (8)
 DATA_TYPE AccFunction (unsigned int layerIndx, int nodeIndx) {
