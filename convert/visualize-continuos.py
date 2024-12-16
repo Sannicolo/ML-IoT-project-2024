@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import serial
 
 # Configure the serial port
-ser = serial.Serial('/dev/cu.usbmodem1101', 9600)  # Update with your serial port and baud rate
+ser = serial.Serial('/dev/cu.usbmodem1201', 9600)  # Update with your serial port and baud rate
 
 def read_serial_data():
     data = []
@@ -15,7 +15,7 @@ def read_serial_data():
         if line.startswith("Button clicked"):
             print("first")
             continue
-        elif line.startswith("grayscaleafter rezise"):
+        elif line.startswith("grayscaleafter resize"):
             print("second")
             data = list(map(float, line.split('[')[1].split(']')[0].split(',')))
             print(data)
