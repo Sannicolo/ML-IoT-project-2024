@@ -363,8 +363,8 @@ void packUnpackVector(int Type)
       }
     }
 
-    //Serial.print("Total count when packing:");
-    //Serial.println(ptrCount);
+    Serial.print("Total count when packing:");
+    Serial.println(ptrCount);
 
   } else if (Type == UNPACK) {
     // Propagating through network, we store all weights first and then bias.

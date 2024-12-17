@@ -8,13 +8,15 @@
 #define LEARNING_RATE 0.01 // The learning rate used to train your network
 #define EPOCH 50           // The maximum number of epochs
 #define DATA_TYPE_FLOAT    // The data type used: Set this to DATA_TYPE_DOUBLE for higher precision. However, it is better to keep this Float if you want to submit the result via BT
-#define EPOCH_RUN 10       // epochs to run
+#define EPOCH_RUN 2       // epochs to run
 extern const int first_layer_input_cnt;
 extern const int classes_cnt;
 
 byte image[160 * 120 * 2]; // QCIF: 176x144 x 2 bytes per pixel (RGB565)
 float resizedImage[24 * 24];
 int bytesPerFrame;
+
+int testSend = 8; 
 
 // You define your network in NN_def
 // Right now, the network consists of three layers:
@@ -128,10 +130,10 @@ void setup() {
   Serial.print("The total number of weights and bias used for on-device training on Arduino: ");
   Serial.println(weights_bias_cnt);
 
-  // Allocate common weight vector, and pass to setupNN, setupBLE
-  DATA_TYPE *WeightBiasPtr = (DATA_TYPE *)calloc(weights_bias_cnt, sizeof(DATA_TYPE));
+  // Allocate common weight vector, and pass to setupNN
+  DATA_TYPE *WeightBiasPtrOriginal = (DATA_TYPE *)calloc(weights_bias_cnt, sizeof(DATA_TYPE));
 
-  setupNN(WeightBiasPtr); // CREATES THE NETWORK BASED ON NN_def[]
+  setupNN(WeightBiasPtrOriginal); // CREATES THE NETWORK BASED ON NN_def[]
   Serial.print("The accuracy before training");
   printAccuracy();
 
@@ -139,7 +141,7 @@ void setup() {
   Serial.println("Training the network locally with: " + String(EPOCH_RUN) + " epochs");
 
   for (int epoch = 0; epoch < EPOCH_RUN; epoch++) {
-    //do_training();
+    do_training();
   }
 
   
@@ -152,7 +154,15 @@ void setup() {
 
   Serial.println("Press button to take image\n");
 
-  BLECentralSetup();
+  packUnpackVector(0);
+
+  /* for (int i = 0; i < weightBiasLength; i++) {
+    Serial.print(WeightBiasPtr[i]);
+    Serial.print(", ");
+  } */
+  Serial.println("Test");
+
+  BLECentralSetup(WeightBiasPtr);
   // BLEPeripheralSetup();
 }
 
