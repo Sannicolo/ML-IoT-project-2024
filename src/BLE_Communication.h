@@ -6,8 +6,8 @@ BLECharacteristic PeripheralCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214
 void sendData(BLEDevice peripheral, float *WeightBiasPtr);
 void BLECentralSetup(float *WeightBiasPtr);
 void CentralSearch(float *WeightBiasPtr);
-void BLEPeripheralSetup();
-void PeripheralLoop();
+void BLEPeripheralSetup( float *WeightBiasPtr);
+void PeripheralLoop(float *WeightBiasPtr);
 
 void sendData(BLEDevice peripheral, float *WeightBiasPtr) {
   // connect to the peripheral
@@ -82,7 +82,7 @@ void BLECentralSetup(float *WeightBiasPtr) {
   CentralSearch(WeightBiasPtr);
 }
 
-void BLEPeripheralSetup() {
+void BLEPeripheralSetup(float *WeightBiasPtr) {
   Serial.begin(9600);
   while (!Serial);
 
@@ -103,10 +103,10 @@ void BLEPeripheralSetup() {
 
   Serial.println("BLE Peripheral");
   delay(2000);
-  PeripheralLoop();
+  PeripheralLoop(WeightBiasPtr);
 }
 
-void PeripheralLoop() {
+void PeripheralLoop(float *WeightBiasPtr) {
   Serial.println("Peripheral Loop");
 
   while (1) {
@@ -119,7 +119,9 @@ void PeripheralLoop() {
       Serial.println(central.address());
 
       // while the central is still connected to peripheral:
+      int count = 0; 
       while (central.connected()) {
+      
         if (PeripheralCharacteristic.written()) {
           // Serial.println(PeripheralCharacteristic.value());
           //  Assuming you have the byte array received from the peripheralCharacteristic
@@ -129,7 +131,7 @@ void PeripheralLoop() {
           PeripheralCharacteristic.readValue(byteArray, sizeof(float));
 
           // Debug: Print byte array content after reception
-          Serial.print("Received byte array: ");
+          //Serial.print("Received byte array: ");
           /* for (int i = 0; i < sizeof(float); i++) {
             uint8_t byteValue = byteArray[i];
             if (byteValue < 0x10) {
@@ -145,7 +147,12 @@ void PeripheralLoop() {
           memcpy(&receivedFloat, byteArray, sizeof(float));
 
           // Print the received float value
-          Serial.println(receivedFloat);
+
+          Serial.println(count);
+          Serial.print(" ");
+          Serial.print(receivedFloat);
+          WeightBiasPtr[count] = receivedFloat;
+          count++;
         }
       }
 

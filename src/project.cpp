@@ -163,7 +163,7 @@ void setup() {
   Serial.println("Test");
 
   BLECentralSetup(WeightBiasPtr);
-  // BLEPeripheralSetup();
+  // BLEPeripheralSetup(WeightBiasPtr);
 }
 
 void loop() {
