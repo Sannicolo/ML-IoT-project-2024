@@ -13,7 +13,7 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr) {
   // connect to the peripheral
   Serial.println("Connecting ...");
 
-  if (peripheral.connect()){
+  if (peripheral.connect()) {
 
     if (peripheral.discoverAttributes()) {
       Serial.println("Attribute discovery succeded!");
@@ -33,13 +33,14 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr) {
 
         if (peripheralCharacteristic) {
           Serial.println("Found peripheral switch characteristic");
-          for (int i = 0; i < 1; i++) {
+          for (int i = 0; i < 11; i++) {
             Serial.println(WeightBiasPtr[i]);
             uint8_t byteArray[sizeof(float)];
             memcpy(byteArray, &WeightBiasPtr[i], sizeof(float));
+            delay(10);
 
             // Debug: Print byte array content before transmission
-            Serial.print("Sending byte array: ");
+            /* Serial.print("Sending byte array: ");
             for (int j = 0; j < sizeof(float); j++) {
               uint8_t byteValue = byteArray[j];
               if (byteValue < 0x10) {
@@ -48,7 +49,7 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr) {
               Serial.print(byteValue, HEX);
               Serial.print(" ");
             }
-            Serial.println();
+            Serial.println(); */
 
             peripheralCharacteristic.writeValue(byteArray, sizeof(float));
           }
@@ -113,16 +114,13 @@ void PeripheralLoop() {
     BLEDevice central = BLE.central();
 
     // if a central is connected to peripheral:
-    if (central)
-    {
+    if (central) {
       Serial.print("Connected to central: ");
       Serial.println(central.address());
 
       // while the central is still connected to peripheral:
-      while (central.connected())
-      {
-        if (PeripheralCharacteristic.written())
-        {
+      while (central.connected()) {
+        if (PeripheralCharacteristic.written()) {
           // Serial.println(PeripheralCharacteristic.value());
           //  Assuming you have the byte array received from the peripheralCharacteristic
           //  Assuming you have a method to get the value as a byte array
@@ -132,17 +130,15 @@ void PeripheralLoop() {
 
           // Debug: Print byte array content after reception
           Serial.print("Received byte array: ");
-          for (int i = 0; i < sizeof(float); i++)
-          {
+          /* for (int i = 0; i < sizeof(float); i++) {
             uint8_t byteValue = byteArray[i];
-            if (byteValue < 0x10)
-            {
+            if (byteValue < 0x10) {
               Serial.print("0");
             }
             Serial.print(byteValue, HEX);
             Serial.print(" ");
-          }
-          Serial.println();
+          } */
+          // Serial.println();
 
           // Convert the byte array back to a float
           float receivedFloat;
@@ -160,29 +156,24 @@ void PeripheralLoop() {
   }
 }
 
-void CentralSearch(float *WeightBiasPtr)
-{
+void CentralSearch(float *WeightBiasPtr) {
   bool foundPeripheral = false;
-  while (!foundPeripheral)
-  {
+  while (!foundPeripheral) {
     Serial.println("Searching...");
 
     // check if a peripheral has been discovered
     BLEDevice peripheral = BLE.available();
 
-    if (peripheral)
-    {
+    if (peripheral) {
       Serial.print(peripheral.localName());
-      if (peripheral.localName() == "Peripheral")
-      {
+      if (peripheral.localName() == "Peripheral") {
         BLE.stopScan();
         Serial.println("Peripheral found. Connecting ...");
 
         sendData(peripheral, WeightBiasPtr);
         // foundPeripheral = true;
         //  peripheral disconnected
-        while (1)
-          ;
+        while (1);
       }
     }
   }
