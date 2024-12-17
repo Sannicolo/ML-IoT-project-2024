@@ -149,9 +149,9 @@ void PeripheralLoop(float *WeightBiasPtr) {
 
           // Print the received float value
 
-          Serial.println(count);
+          Serial.print(count);
           Serial.print(" ");
-          Serial.print(receivedFloat);
+          Serial.println(receivedFloat);
           WeightBiasPtr[count] = receivedFloat;
           count++;
         }

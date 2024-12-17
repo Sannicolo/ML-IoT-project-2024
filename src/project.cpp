@@ -8,7 +8,7 @@
 #define LEARNING_RATE 0.01 // The learning rate used to train your network
 #define EPOCH 50           // The maximum number of epochs
 #define DATA_TYPE_FLOAT    // The data type used: Set this to DATA_TYPE_DOUBLE for higher precision. However, it is better to keep this Float if you want to submit the result via BT
-#define EPOCH_RUN 2       // epochs to run
+#define EPOCH_RUN 1       // epochs to run
 extern const int first_layer_input_cnt;
 extern const int classes_cnt;
 
@@ -152,7 +152,6 @@ void setup() {
   }
   bytesPerFrame = Camera.width() * Camera.height() * Camera.bytesPerPixel();
 
-  Serial.println("Press button to take image\n");
 
   packUnpackVector(0);
 
@@ -167,6 +166,9 @@ void setup() {
   Serial.println("BLE completed. Unpacking values...");
   packUnpackVector(1);
   printAccuracy();
+
+  Serial.println("Press button to take image\n");
+
 }
 
 void loop() {
