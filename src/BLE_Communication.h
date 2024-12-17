@@ -1,7 +1,7 @@
 #include <ArduinoBLE.h>
 
 BLEService PeripheralService("19B10000-E8F2-537E-4F6C-D104768A1214");
-BLEByteCharacteristic PeripheralCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
+BLECharacteristic PeripheralCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite, sizeof(float));
 
 void sendData(BLEDevice peripheral, float *WeightBiasPtr);
 void BLECentralSetup(float *WeightBiasPtr);
@@ -9,50 +9,54 @@ void CentralSearch(float *WeightBiasPtr);
 void BLEPeripheralSetup();
 void PeripheralLoop();
 
-void sendData(BLEDevice peripheral, float *WeightBiasPtr)
-{
+void sendData(BLEDevice peripheral, float *WeightBiasPtr) {
   // connect to the peripheral
   Serial.println("Connecting ...");
 
-  if (peripheral.connect())
-  {
+  if (peripheral.connect()){
 
-    if (peripheral.discoverAttributes())
-    {
+    if (peripheral.discoverAttributes()) {
       Serial.println("Attribute discovery succeded!");
     }
-    else
-    {
+    else {
       Serial.println("Attribute discovery failed!");
       peripheral.disconnect();
       return;
     }
 
-    if (peripheral.localName() == "Peripheral")
-    {
+    if (peripheral.localName() == "Peripheral") {
       BLEService peripheralService = peripheral.service("19B10000-E8F2-537E-4F6C-D104768A1214");
 
-      if (peripheralService)
-      {
+      if (peripheralService) {
         Serial.println("Found peripheral service");
         BLECharacteristic peripheralCharacteristic = peripheralService.characteristic("19B10001-E8F2-537E-4F6C-D104768A1214");
 
-        if (peripheralCharacteristic)
-        {
+        if (peripheralCharacteristic) {
           Serial.println("Found peripheral switch characteristic");
-          for (int i = 0; i < 1; i++)
-          {
+          for (int i = 0; i < 1; i++) {
             Serial.println(WeightBiasPtr[i]);
             uint8_t byteArray[sizeof(float)];
             memcpy(byteArray, &WeightBiasPtr[i], sizeof(float));
+
+            // Debug: Print byte array content before transmission
+            Serial.print("Sending byte array: ");
+            for (int j = 0; j < sizeof(float); j++) {
+              uint8_t byteValue = byteArray[j];
+              if (byteValue < 0x10) {
+                Serial.print("0");
+              }
+              Serial.print(byteValue, HEX);
+              Serial.print(" ");
+            }
+            Serial.println();
+
             peripheralCharacteristic.writeValue(byteArray, sizeof(float));
           }
         }
       }
     }
   }
-  else
-  {
+  else {
     Serial.println("Failed to connect!");
     return;
   }
@@ -62,38 +66,30 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr)
   Serial.println("Disconnected");
 }
 
-void BLECentralSetup(float *WeightBiasPtr)
-{
+void BLECentralSetup(float *WeightBiasPtr) {
 
   Serial.begin(9600);
-  while (!Serial)
-    ;
+  while (!Serial);
 
-  if (!BLE.begin())
-  {
+  if (!BLE.begin()) {
     Serial.println("Starting Bluetooth Low Energy failed!");
 
-    while (1)
-      ;
+    while (1);
   }
 
   BLE.scan();
   CentralSearch(WeightBiasPtr);
 }
 
-void BLEPeripheralSetup()
-{
+void BLEPeripheralSetup() {
   Serial.begin(9600);
-  while (!Serial)
-    ;
+  while (!Serial);
 
   // begin initialization
-  if (!BLE.begin())
-  {
+  if (!BLE.begin()){
     Serial.println("starting Bluetooth Low Energy failed!");
 
-    while (1)
-      ;
+    while (1);
   }
 
   BLE.setLocalName("Peripheral");
@@ -101,7 +97,7 @@ void BLEPeripheralSetup()
 
   PeripheralService.addCharacteristic(PeripheralCharacteristic);
   BLE.addService(PeripheralService);
-  PeripheralCharacteristic.writeValue(0);
+  //PeripheralCharacteristic.writeValue(0);
   BLE.advertise();
 
   Serial.println("BLE Peripheral");
@@ -109,12 +105,10 @@ void BLEPeripheralSetup()
   PeripheralLoop();
 }
 
-void PeripheralLoop()
-{
+void PeripheralLoop() {
   Serial.println("Peripheral Loop");
 
-  while (1)
-  {
+  while (1) {
     // listen for Bluetooth Low Energy peripherals to connect:
     BLEDevice central = BLE.central();
 
@@ -129,19 +123,33 @@ void PeripheralLoop()
       {
         if (PeripheralCharacteristic.written())
         {
-          //Serial.println(PeripheralCharacteristic.value());
-          // Assuming you have the byte array received from the peripheralCharacteristic
+          // Serial.println(PeripheralCharacteristic.value());
+          //  Assuming you have the byte array received from the peripheralCharacteristic
+          //  Assuming you have a method to get the value as a byte array
           // Assuming you have a method to get the value as a byte array
-        // Assuming you have a method to get the value as a byte array
-        uint8_t byteArray[sizeof(float)];
-        PeripheralCharacteristic.readValue(byteArray, sizeof(float));
-        
-        // Convert the byte array back to a float
-        float receivedFloat;
-        memcpy(&receivedFloat, byteArray, sizeof(float));
-        
-        // Print the received float value
-        Serial.println(receivedFloat);
+          uint8_t byteArray[sizeof(float)];
+          PeripheralCharacteristic.readValue(byteArray, sizeof(float));
+
+          // Debug: Print byte array content after reception
+          Serial.print("Received byte array: ");
+          for (int i = 0; i < sizeof(float); i++)
+          {
+            uint8_t byteValue = byteArray[i];
+            if (byteValue < 0x10)
+            {
+              Serial.print("0");
+            }
+            Serial.print(byteValue, HEX);
+            Serial.print(" ");
+          }
+          Serial.println();
+
+          // Convert the byte array back to a float
+          float receivedFloat;
+          memcpy(&receivedFloat, byteArray, sizeof(float));
+
+          // Print the received float value
+          Serial.println(receivedFloat);
         }
       }
 
