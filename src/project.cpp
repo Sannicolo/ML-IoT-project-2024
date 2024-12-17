@@ -21,7 +21,7 @@ int bytesPerFrame;
 // 1. An input layer with the size of your input as defined in the variable first_layer_input_cnt in cnn_data.h
 // 2. A hidden layer with 20 nodes
 // 3. An output layer with as many classes as you defined in the variable classes_cnt in cnn_data.h
-static const unsigned int NN_def[] = {first_layer_input_cnt, 15, classes_cnt};
+static const unsigned int NN_def[] = {first_layer_input_cnt, 10, classes_cnt};
 
 #include "data-more-test.h" // The data, labels and the sizes of all objects are stored here
 #include "NN_functions.h"   // All NN functions are stored here

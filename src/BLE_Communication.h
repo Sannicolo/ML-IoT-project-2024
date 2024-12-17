@@ -1,8 +1,6 @@
 #include <ArduinoBLE.h>
 
 BLEService PeripheralService("19B10000-E8F2-537E-4F6C-D104768A1214"); // Bluetooth® Low Energy LED Service
-
-// Bluetooth® Low Energy LED Switch Characteristic - custom 128-bit UUID, read and writable by central
 BLEByteCharacteristic PeripheralCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
 
 void sendData(BLEDevice peripheral);
@@ -94,7 +92,7 @@ void PeripherialLoop(){
   bool peripheralConnected = false;
 
   while(!peripheralConnected){
-    // listen for Bluetooth® Low Energy peripherals to connect:
+    // listen for Bluetooth Low Energy peripherals to connect:
     BLEDevice central = BLE.central();
 
     // if a central is connected to peripheral:
@@ -105,16 +103,15 @@ void PeripherialLoop(){
 
       // while the central is still connected to peripheral:
       while (central.connected()) {
-        // if the remote device wrote to the characteristic,
-        // use the value to control the LED:
         if (PeripheralCharacteristic.written()) {
-        Serial.println(PeripheralCharacteristic.value());
+          Serial.println(PeripheralCharacteristic.value());
         }
       }
 
       // when the central disconnects, print it out:
       Serial.print(F("Disconnected from central: "));
       Serial.println(central.address());
+      peripheralConnected = true;
     }
   }
 }
@@ -127,15 +124,17 @@ void CentralSearch() {
     Serial.println("Searching...");
 
     if (peripheral) {
+      Serial.println(peripheral.localName());
       // see if peripheral is device with local name "Peripheral"
       if (peripheral.localName() == "Peripheral") {
         // stop scanning
         BLE.stopScan();
+        Serial1.println("Peripheral found. Connecting ...");
 
         sendData(peripheral);
         foundPeripheral = true;
         // peripheral disconnected, we are done
-        while (1);
+        //while (1);
       }
     }
   }
