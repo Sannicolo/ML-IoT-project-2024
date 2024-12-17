@@ -21,7 +21,7 @@ void setup() {
   delay(2000); // Wait for 2 seconds before scanning
 
   Serial.println("Central Arduino scanning for Peripheral...");
-  BLE.scanForUuid(SERVICE_UUID);
+  BLE.scan();
 }
 
 void loop() {
