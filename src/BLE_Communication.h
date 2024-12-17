@@ -7,7 +7,7 @@ void sendData(BLEDevice peripheral);
 void BLECentralSetup();
 void CentralSearch();
 void BLEPeripheralSetup();
-void PeripherialLoop();
+void PeripheralLoop();
 
 void sendData(BLEDevice peripheral) {
   // connect to the peripheral
@@ -73,14 +73,14 @@ void BLEPeripheralSetup(){
   BLE.advertise();
 
   Serial.println("BLE Peripheral");
-  PeripherialLoop();
+  delay(2000);
+  PeripheralLoop();
 }
 
-void PeripherialLoop(){
-  bool peripheralConnected = false;
+void PeripheralLoop(){
   Serial.println("Peripheral Loop");
 
-  while(!peripheralConnected){
+  while(1){
     // listen for Bluetooth Low Energy peripherals to connect:
     BLEDevice central = BLE.central();
 
@@ -99,7 +99,7 @@ void PeripherialLoop(){
 
       Serial.print(F("Disconnected from central: "));
       Serial.println(central.address());
-      peripheralConnected = true;
+      //peripheralConnected = true;
     } else {
       Serial.println("No central connected!!!");
     }
