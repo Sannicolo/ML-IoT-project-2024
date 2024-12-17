@@ -50,11 +50,7 @@ void loop() {
       // if the remote device wrote to the characteristic,
       // use the value to control the LED:
       if (switchCharacteristic.written()) {
-        if (switchCharacteristic.value()) {   // any value other than 0
-          Serial.println("LED on");
-        } else {                              // a 0 value
-          Serial.println(F("LED off"));
-        }
+       Serial.println(switchCharacteristic.value());
       }
     }
 
