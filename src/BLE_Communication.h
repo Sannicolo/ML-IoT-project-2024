@@ -1,76 +1,148 @@
-#ifndef BLE_COMMUNICATION_H
-#define BLE_COMMUNICATION_H
-
 #include <ArduinoBLE.h>
 
 
-// Går att köra build, men vet ej om det funkar. project.cpp behöver uppdateras med exchangeWeights, där ena ardunio är initiator och den andra är responder.
+BLEService PeripheralService("19B10000-E8F2-537E-4F6C-D104768A1214"); // Bluetooth® Low Energy LED Service
 
-BLEService weightService("180C");
-BLECharacteristic weightCharacteristic("2A56", BLERead | BLEWrite, 512);
-BLECharacteristic controlCharacteristic("2A57", BLERead | BLEWrite, 1);
+// Bluetooth® Low Energy LED Switch Characteristic - custom 128-bit UUID, read and writable by central
+BLEByteCharacteristic PeripheralCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
 
-void setupBLE() {
+void sendData(BLEDevice peripheral);
+void BLECentralSetup();
+void CentralSearch();
+void BLEPeripheralSetup();
+void PeripherialLoop();
+
+void sendData(BLEDevice peripheral) {
+  // connect to the peripheral
+  Serial.println("Connecting ...");
+
+  if (peripheral.connect()) {
+    Serial.println("Connected");
+
+    if (peripheral.discoverAttributes()) {
+      Serial.println("Attribute discovery succeded!");
+    } 
+    else {
+      Serial.println("Attribute discovery failed!");
+      peripheral.disconnect();
+      return;
+    }
+
+    if (peripheral.localName() == "Peripheral") {
+      // get the peripheral service
+      BLEService peripheralService = peripheral.service("19B10000-E8F2-537E-4F6C-D104768A1214");
+
+      if (peripheralService) {
+        Serial.println("Found peripheral service");
+        // get the peripheral switch characteristic
+        BLECharacteristic peripheralCharacteristic = peripheralService.characteristic("19B10001-E8F2-537E-4F6C-D104768A1214");
+
+        if (peripheralCharacteristic) {
+          Serial.println("Found peripheral switch characteristic");
+          peripheralCharacteristic.writeValue((uint8_t)1);
+        }
+      }
+    }
+  }
+  else {
+    Serial.println("Failed to connect!");
+    return;
+  }
+
+  Serial.println("Disconnecting ...");
+  peripheral.disconnect();
+  Serial.println("Disconnected");
+}
+
+void BLECentralSetup() {
+  Serial.begin(9600);
+  while (!Serial);
+
+  // begin initialization
   if (!BLE.begin()) {
-    Serial.println("Starting BLE failed!");
+    Serial.println("Starting Bluetooth Low Energy failed!");
+
     while (1);
   }
 
-  BLE.setLocalName("Arduino");
-  BLE.setAdvertisedService(weightService);
-  weightService.addCharacteristic(weightCharacteristic);
-  weightService.addCharacteristic(controlCharacteristic);
-  BLE.addService(weightService);
+  // start scanning for peripherals
+  BLE.scan();
+  CentralSearch();
+}
 
-  weightCharacteristic.writeValue((const uint8_t*)0, 0);
-  controlCharacteristic.writeValue((const uint8_t*)0, 0);
+void BLEPeripheralSetup(){
+    Serial.begin(9600);
+  while (!Serial);
 
+  // begin initialization
+  if (!BLE.begin()) {
+    Serial.println("starting Bluetooth® Low Energy module failed!");
+
+    while (1);
+  }
+
+  // set advertised local name and service UUID:
+  BLE.setLocalName("Peripheral");
+  BLE.setAdvertisedService(PeripheralService);
+
+  // add the characteristic to the service
+  PeripheralService.addCharacteristic(PeripheralCharacteristic);
+
+  // add service
+  BLE.addService(PeripheralService);
+
+  // set the initial value for the characeristic:
+  PeripheralCharacteristic.writeValue(0);
+
+  // start advertising
   BLE.advertise();
-  Serial.println("BLE device is now advertising");
+
+  Serial.println("BLE Peripheral");
 }
 
-void sendVector(float* WeightBiasPtr, unsigned int length) {
-  Serial.println("Sending vector...");
-  for (unsigned int i = 0; i < length; i++) {
-    weightCharacteristic.writeValue((const uint8_t*)&WeightBiasPtr[i], sizeof(float));
-    Serial.print("Sent value: ");
-    Serial.println(WeightBiasPtr[i]);
-  }
-}
+void PeripherialLoop(){
+  // listen for Bluetooth® Low Energy peripherals to connect:
+  BLEDevice central = BLE.central();
 
-void receiveVector(float* WeightBiasPtr, unsigned int length) {
-  Serial.println("Receiving vector...");
-  for (unsigned int i = 0; i < length; i++) {
-    while (!weightCharacteristic.written()) {
-      // Wait for data to be written
+  // if a central is connected to peripheral:
+  if (central) {
+    Serial.print("Connected to central: ");
+    // print the central's MAC address:
+    Serial.println(central.address());
+
+    // while the central is still connected to peripheral:
+    while (central.connected()) {
+      // if the remote device wrote to the characteristic,
+      // use the value to control the LED:
+      if (PeripheralCharacteristic.written()) {
+       Serial.println(PeripheralCharacteristic.value());
+      }
     }
-    weightCharacteristic.readValue((uint8_t*)&WeightBiasPtr[i], sizeof(float));
-    Serial.print("Received value: ");
-    Serial.println(WeightBiasPtr[i]);
+
+    // when the central disconnects, print it out:
+    Serial.print(F("Disconnected from central: "));
+    Serial.println(central.address());
   }
 }
 
-void exchangeWeights(float* WeightBiasPtr, unsigned int length, bool isInitiator) {
-  uint8_t controlValue;
-  if (isInitiator) {
-    // Initiator sends first
-    sendVector(WeightBiasPtr, length);
-    controlValue = 1;
-    controlCharacteristic.writeValue(&controlValue, 1); // Signal that sending is done
-    do {
-      controlCharacteristic.readValue(&controlValue, 1);
-    } while (controlValue != 2); // Wait for responder to finish receiving and sending
-    receiveVector(WeightBiasPtr, length);
-  } else {
-    // Responder receives first
-    do {
-      controlCharacteristic.readValue(&controlValue, 1);
-    } while (controlValue != 1); // Wait for initiator to finish sending
-    receiveVector(WeightBiasPtr, length);
-    sendVector(WeightBiasPtr, length);
-    controlValue = 2;
-    controlCharacteristic.writeValue(&controlValue, 1); // Signal that sending is done
+void CentralSearch() {
+  bool foundPeripheral = false;
+  while (!foundPeripheral) {
+    // check if a peripheral has been discovered
+    BLEDevice peripheral = BLE.available();
+    Serial.println("Searching...");
+
+    if (peripheral) {
+      // see if peripheral is device with local name "Peripheral"
+      if (peripheral.localName() == "Peripheral") {
+        // stop scanning
+        BLE.stopScan();
+
+        sendData(peripheral);
+        foundPeripheral = true;
+        // peripheral disconnected, we are done
+        while (1);
+      }
+    }
   }
 }
-
-#endif // BLE_COMMUNICATION_H

@@ -115,7 +115,6 @@ void setup() {
   srand(0);
 
   Serial.begin(9600);
-  setupBLE();
 
   delay(5000);
   while (!Serial);
@@ -140,17 +139,10 @@ void setup() {
   Serial.println("Training the network locally with: " + String(EPOCH_RUN) + " epochs");
 
   for (int epoch = 0; epoch < EPOCH_RUN; epoch++) {
-    do_training();
+    //do_training();
   }
 
-  // delay(2000);
-  unsigned int totalParams = 100; // Example size, adjust as needed
-
-  packUnpackVector(0);
-  sendVector(WeightBiasPtr, totalParams);
-  receiveVector(WeightBiasPtr, totalParams);
-  packUnpackVector(AVERAGE);
-
+  
   if (!Camera.begin(QQVGA, RGB565, 1, OV7675)) {
     //QCIF, QQVGA
     Serial.println("Failed to initialize camera");
@@ -159,6 +151,9 @@ void setup() {
   bytesPerFrame = Camera.width() * Camera.height() * Camera.bytesPerPixel();
 
   Serial.println("Press button to take image\n");
+
+  BLECentralSetup();
+  //BLEPeripheralSetup();
 }
 
 void loop() {
