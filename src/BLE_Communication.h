@@ -1,6 +1,5 @@
 #include <ArduinoBLE.h>
 
-
 BLEService PeripheralService("19B10000-E8F2-537E-4F6C-D104768A1214"); // Bluetooth® Low Energy LED Service
 
 // Bluetooth® Low Energy LED Switch Characteristic - custom 128-bit UUID, read and writable by central
@@ -71,16 +70,6 @@ void BLECentralSetup() {
 }
 
 void BLEPeripheralSetup(){
-    Serial.begin(9600);
-  while (!Serial);
-
-  // begin initialization
-  if (!BLE.begin()) {
-    Serial.println("starting Bluetooth® Low Energy module failed!");
-
-    while (1);
-  }
-
   // set advertised local name and service UUID:
   BLE.setLocalName("Peripheral");
   BLE.setAdvertisedService(PeripheralService);
@@ -98,30 +87,35 @@ void BLEPeripheralSetup(){
   BLE.advertise();
 
   Serial.println("BLE Peripheral");
+  PeripherialLoop();
 }
 
 void PeripherialLoop(){
-  // listen for Bluetooth® Low Energy peripherals to connect:
-  BLEDevice central = BLE.central();
+  bool peripheralConnected = false;
 
-  // if a central is connected to peripheral:
-  if (central) {
-    Serial.print("Connected to central: ");
-    // print the central's MAC address:
-    Serial.println(central.address());
+  while(!peripheralConnected){
+    // listen for Bluetooth® Low Energy peripherals to connect:
+    BLEDevice central = BLE.central();
 
-    // while the central is still connected to peripheral:
-    while (central.connected()) {
-      // if the remote device wrote to the characteristic,
-      // use the value to control the LED:
-      if (PeripheralCharacteristic.written()) {
-       Serial.println(PeripheralCharacteristic.value());
+    // if a central is connected to peripheral:
+    if (central) {
+      Serial.print("Connected to central: ");
+      // print the central's MAC address:
+      Serial.println(central.address());
+
+      // while the central is still connected to peripheral:
+      while (central.connected()) {
+        // if the remote device wrote to the characteristic,
+        // use the value to control the LED:
+        if (PeripheralCharacteristic.written()) {
+        Serial.println(PeripheralCharacteristic.value());
+        }
       }
-    }
 
-    // when the central disconnects, print it out:
-    Serial.print(F("Disconnected from central: "));
-    Serial.println(central.address());
+      // when the central disconnects, print it out:
+      Serial.print(F("Disconnected from central: "));
+      Serial.println(central.address());
+    }
   }
 }
 
