@@ -1,83 +1,159 @@
 #include <ArduinoBLE.h>
 
-// Define the same service and characteristic UUIDs as the Peripheral
-const char* SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0";
-const char* CHARACTERISTIC_UUID = "abcdef01-1234-5678-1234-56789abcdef0";
-
-BLEDevice peripheralDevice;
-BLECharacteristic sendCharacteristic;
-
 void setup() {
   Serial.begin(9600);
-  while (!Serial); // Wait for Serial to be ready
+  while (!Serial);
 
-  // Initialize BLE
+  // begin initialization
   if (!BLE.begin()) {
-    Serial.println("Starting BLE failed!");
+    Serial.println("starting Bluetooth® Low Energy module failed!");
+
     while (1);
   }
 
-  Serial.println("Central Arduino initializing...");
-  delay(2000); // Wait for 2 seconds before scanning
+  Serial.println("Bluetooth® Low Energy Central - Peripheral Explorer");
 
-  Serial.println("Central Arduino scanning for Peripheral...");
+  // start scanning for peripherals
   BLE.scan();
 }
 
 void loop() {
-  // Check if a peripheral is available
+  // check if a peripheral has been discovered
   BLEDevice peripheral = BLE.available();
 
   if (peripheral) {
-    Serial.print("Found peripheral: ");
-    Serial.println(peripheral.address());
+    // discovered a peripheral, print out address, local name, and advertised service
+    Serial.print("Found ");
+    Serial.print(peripheral.address());
+    Serial.print(" '");
+    Serial.print(peripheral.localName());
+    Serial.print("' ");
+    Serial.print(peripheral.advertisedServiceUuid());
+    Serial.println();
 
-    // Verify if the peripheral has the desired service
-    if (peripheral.hasService(SERVICE_UUID)) {
-      Serial.println("Peripheral has the desired service. Attempting to connect...");
+    // see if peripheral is a LED
+    if (peripheral.localName() == "Peripheral") {
+      // stop scanning
+      BLE.stopScan();
 
-      // Connect to the peripheral
-      if (peripheral.connect()) {
-        Serial.println("Connected to peripheral");
+      explorerPeripheral(peripheral);
 
-        // Discover the service and characteristic
-        if (peripheral.discoverService(SERVICE_UUID)) {
-          Serial.println("Discovered service");
-
-          sendCharacteristic = peripheral.characteristic(CHARACTERISTIC_UUID);
-
-          if (sendCharacteristic) {
-            Serial.println("Found characteristic. Preparing to send data...");
-
-            // Prepare the message to send
-            String message = "Hello from Central!";
-            // Send the message as a C-style string
-            if (sendCharacteristic.writeValue(message.c_str())) {
-              Serial.print("Sent: ");
-              Serial.println(message);
-            } else {
-              Serial.println("Failed to send data");
-            }
-          } else {
-            Serial.println("Failed to find the characteristic");
-          }
-        } else {
-          Serial.println("Failed to discover the service");
-        }
-
-        // Disconnect after sending
-        peripheral.disconnect();
-        Serial.println("Disconnected from peripheral");
-
-        // Restart scanning after a short delay
-        delay(2000);
-        Serial.println("Restarting scan for Peripheral...");
-        BLE.scanForUuid(SERVICE_UUID);
-      } else {
-        Serial.println("Failed to connect to peripheral");
+      // peripheral disconnected, we are done
+      while (1) {
+        // do nothing
       }
-    } else {
-      Serial.println("Peripheral does not have the desired service");
     }
+  }
+}
+
+void explorerPeripheral(BLEDevice peripheral) {
+  // connect to the peripheral
+  Serial.println("Connecting ...");
+
+  if (peripheral.connect()) {
+    Serial.println("Connected");
+  } else {
+    Serial.println("Failed to connect!");
+    return;
+  }
+
+  // discover peripheral attributes
+  Serial.println("Discovering attributes ...");
+  if (peripheral.discoverAttributes()) {
+    Serial.println("Attributes discovered");
+  } else {
+    Serial.println("Attribute discovery failed!");
+    peripheral.disconnect();
+    return;
+  }
+
+  // read and print device name of peripheral
+  Serial.println();
+  Serial.print("Device name: ");
+  Serial.println(peripheral.deviceName());
+  Serial.print("Appearance: 0x");
+  Serial.println(peripheral.appearance(), HEX);
+  Serial.println();
+
+  // loop the services of the peripheral and explore each
+  for (int i = 0; i < peripheral.serviceCount(); i++) {
+    BLEService service = peripheral.service(i);
+
+    exploreService(service);
+  }
+
+  Serial.println();
+
+  // we are done exploring, disconnect
+  Serial.println("Disconnecting ...");
+  peripheral.disconnect();
+  Serial.println("Disconnected");
+}
+
+void exploreService(BLEService service) {
+  // print the UUID of the service
+  Serial.print("Service ");
+  Serial.println(service.uuid());
+
+  // loop the characteristics of the service and explore each
+  for (int i = 0; i < service.characteristicCount(); i++) {
+    BLECharacteristic characteristic = service.characteristic(i);
+
+    exploreCharacteristic(characteristic);
+  }
+}
+
+void exploreCharacteristic(BLECharacteristic characteristic) {
+  // print the UUID and properties of the characteristic
+  Serial.print("\tCharacteristic ");
+  Serial.print(characteristic.uuid());
+  Serial.print(", properties 0x");
+  Serial.print(characteristic.properties(), HEX);
+
+  // check if the characteristic is readable
+  if (characteristic.canRead()) {
+    // read the characteristic value
+    characteristic.read();
+
+    if (characteristic.valueLength() > 0) {
+      // print out the value of the characteristic
+      Serial.print(", value 0x");
+      printData(characteristic.value(), characteristic.valueLength());
+    }
+  }
+  Serial.println();
+
+  // loop the descriptors of the characteristic and explore each
+  for (int i = 0; i < characteristic.descriptorCount(); i++) {
+    BLEDescriptor descriptor = characteristic.descriptor(i);
+
+    exploreDescriptor(descriptor);
+  }
+}
+
+void exploreDescriptor(BLEDescriptor descriptor) {
+  // print the UUID of the descriptor
+  Serial.print("\t\tDescriptor ");
+  Serial.print(descriptor.uuid());
+
+  // read the descriptor value
+  descriptor.read();
+
+  // print out the value of the descriptor
+  Serial.print(", value 0x");
+  printData(descriptor.value(), descriptor.valueLength());
+
+  Serial.println();
+}
+
+void printData(const unsigned char data[], int length) {
+  for (int i = 0; i < length; i++) {
+    unsigned char b = data[i];
+
+    if (b < 16) {
+      Serial.print("0");
+    }
+
+    Serial.print(b, HEX);
   }
 }

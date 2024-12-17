@@ -1,64 +1,65 @@
 #include <ArduinoBLE.h>
 
-// Define custom service and characteristic UUIDs
-const char* SERVICE_UUID = "12345678-1234-5678-1234-56789abcdef0";
-const char* CHARACTERISTIC_UUID = "abcdef01-1234-5678-1234-56789abcdef0";
+BLEService ledService("19B10000-E8F2-537E-4F6C-D104768A1214"); // Bluetooth® Low Energy LED Service
 
-// Create BLE Service
-BLEService customService(SERVICE_UUID);
-
-// Create BLE Characteristic for receiving data (Write)
-BLECharacteristic receiveCharacteristic(CHARACTERISTIC_UUID, BLEWrite, 20);
+// Bluetooth® Low Energy LED Switch Characteristic - custom 128-bit UUID, read and writable by central
+BLEByteCharacteristic switchCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
 
 void setup() {
   Serial.begin(9600);
-  while (!Serial); // Wait for Serial to be ready
+  while (!Serial);
 
-  // Initialize BLE
+  // begin initialization
   if (!BLE.begin()) {
-    Serial.println("Starting BLE failed!");
+    Serial.println("starting Bluetooth® Low Energy module failed!");
+
     while (1);
   }
 
-  // Set up the service and characteristic
-  customService.addCharacteristic(receiveCharacteristic);
-  BLE.addService(customService);
+  // set advertised local name and service UUID:
+  BLE.setLocalName("Peripheral");
+  BLE.setAdvertisedService(ledService);
 
-  // Set the device name and start advertising
-  BLE.setLocalName("PeripheralArduino");
+  // add the characteristic to the service
+  ledService.addCharacteristic(switchCharacteristic);
+
+  // add service
+  BLE.addService(ledService);
+
+  // set the initial value for the characeristic:
+  switchCharacteristic.writeValue(0);
+
+  // start advertising
   BLE.advertise();
 
-  Serial.println("Peripheral Arduino is now advertising...");
+  Serial.println("BLE Peripheral");
 }
 
 void loop() {
-  // Wait for a central device to connect
+  // listen for Bluetooth® Low Energy peripherals to connect:
   BLEDevice central = BLE.central();
 
+  // if a central is connected to peripheral:
   if (central) {
     Serial.print("Connected to central: ");
+    // print the central's MAC address:
     Serial.println(central.address());
 
+    // while the central is still connected to peripheral:
     while (central.connected()) {
-      // Check if the characteristic has been written to
-      if (receiveCharacteristic.written()) {
-        // Retrieve the data as a byte array
-        const uint8_t* data = receiveCharacteristic.value();
-        size_t length = receiveCharacteristic.valueLength();
-        
-        // Ensure the data is null-terminated and within buffer size
-        char buffer[21] = {0}; // 20 bytes + 1 null terminator
-        if (length > 20) length = 20; // Prevent buffer overflow
-        memcpy(buffer, data, length);
-        
-        // Convert to Arduino String
-        String receivedData = String(buffer);
-        Serial.print("Received: ");
-        Serial.println(receivedData);
+      // if the remote device wrote to the characteristic,
+      // use the value to control the LED:
+      if (switchCharacteristic.written()) {
+        if (switchCharacteristic.value()) {   // any value other than 0
+          Serial.println("LED on");
+        } else {                              // a 0 value
+          Serial.println(F("LED off"));
+        }
       }
     }
 
-    Serial.print("Disconnected from central: ");
+    // when the central disconnects, print it out:
+    Serial.print(F("Disconnected from central: "));
     Serial.println(central.address());
   }
 }
