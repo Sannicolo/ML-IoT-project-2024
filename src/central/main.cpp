@@ -1,50 +1,25 @@
 #include <ArduinoBLE.h>
 
-void setup() {
-  Serial.begin(9600);
-  while (!Serial);
+void exploreService(BLEService service);
+void explorerPeripheral(BLEDevice peripheral);
+void exploreCharacteristic(BLECharacteristic characteristic);
+void exploreDescriptor(BLEDescriptor descriptor);
+void printData(const unsigned char data[], int length);
 
-  // begin initialization
-  if (!BLE.begin()) {
-    Serial.println("starting Bluetooth® Low Energy module failed!");
 
-    while (1);
-  }
+void exploreService(BLEService service) {
+  // print the UUID of the service
+  Serial.print("Service ");
+  Serial.println(service.uuid());
 
-  Serial.println("Bluetooth® Low Energy Central - Peripheral Explorer");
+  // loop the characteristics of the service and explore each
+  for (int i = 0; i < service.characteristicCount(); i++) {
+    BLECharacteristic characteristic = service.characteristic(i);
 
-  // start scanning for peripherals
-  BLE.scan();
-}
-
-void loop() {
-  // check if a peripheral has been discovered
-  BLEDevice peripheral = BLE.available();
-
-  if (peripheral) {
-    // discovered a peripheral, print out address, local name, and advertised service
-    Serial.print("Found ");
-    Serial.print(peripheral.address());
-    Serial.print(" '");
-    Serial.print(peripheral.localName());
-    Serial.print("' ");
-    Serial.print(peripheral.advertisedServiceUuid());
-    Serial.println();
-
-    // see if peripheral is a LED
-    if (peripheral.localName() == "Peripheral") {
-      // stop scanning
-      BLE.stopScan();
-
-      explorerPeripheral(peripheral);
-
-      // peripheral disconnected, we are done
-      while (1) {
-        // do nothing
-      }
-    }
+    exploreCharacteristic(characteristic);
   }
 }
+
 
 void explorerPeripheral(BLEDevice peripheral) {
   // connect to the peripheral
@@ -90,18 +65,6 @@ void explorerPeripheral(BLEDevice peripheral) {
   Serial.println("Disconnected");
 }
 
-void exploreService(BLEService service) {
-  // print the UUID of the service
-  Serial.print("Service ");
-  Serial.println(service.uuid());
-
-  // loop the characteristics of the service and explore each
-  for (int i = 0; i < service.characteristicCount(); i++) {
-    BLECharacteristic characteristic = service.characteristic(i);
-
-    exploreCharacteristic(characteristic);
-  }
-}
 
 void exploreCharacteristic(BLECharacteristic characteristic) {
   // print the UUID and properties of the characteristic
@@ -155,5 +118,51 @@ void printData(const unsigned char data[], int length) {
     }
 
     Serial.print(b, HEX);
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+
+  // begin initialization
+  if (!BLE.begin()) {
+    Serial.println("starting Bluetooth® Low Energy module failed!");
+
+    while (1);
+  }
+
+  Serial.println("Bluetooth® Low Energy Central - Peripheral Explorer");
+
+  // start scanning for peripherals
+  BLE.scan();
+}
+
+void loop() {
+  // check if a peripheral has been discovered
+  BLEDevice peripheral = BLE.available();
+
+  if (peripheral) {
+    // discovered a peripheral, print out address, local name, and advertised service
+    Serial.print("Found ");
+    Serial.print(peripheral.address());
+    Serial.print(" '");
+    Serial.print(peripheral.localName());
+    Serial.print("' ");
+    Serial.print(peripheral.advertisedServiceUuid());
+    Serial.println();
+
+    // see if peripheral is a LED
+    if (peripheral.localName() == "Peripheral") {
+      // stop scanning
+      BLE.stopScan();
+
+      explorerPeripheral(peripheral);
+
+      // peripheral disconnected, we are done
+      while (1) {
+        // do nothing
+      }
+    }
   }
 }
