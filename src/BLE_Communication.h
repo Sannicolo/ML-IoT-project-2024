@@ -64,6 +64,16 @@ void BLECentralSetup() {
 }
 
 void BLEPeripheralSetup(){
+  Serial.begin(9600);
+  while (!Serial);
+
+  // begin initialization
+  if (!BLE.begin()) {
+    Serial.println("starting Bluetooth® Low Energy module failed!");
+
+    while (1);
+  }
+  
   BLE.setLocalName("Peripheral");
   BLE.setAdvertisedService(PeripheralService);
 
