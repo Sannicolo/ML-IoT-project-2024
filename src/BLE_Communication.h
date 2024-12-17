@@ -1,6 +1,6 @@
 #include <ArduinoBLE.h>
 
-BLEService PeripheralService("19B10000-E8F2-537E-4F6C-D104768A1214"); // Bluetooth® Low Energy LED Service
+BLEService PeripheralService("19B10000-E8F2-537E-4F6C-D104768A1214"); 
 BLEByteCharacteristic PeripheralCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
 
 void sendData(BLEDevice peripheral);
@@ -26,12 +26,10 @@ void sendData(BLEDevice peripheral) {
     }
 
     if (peripheral.localName() == "Peripheral") {
-      // get the peripheral service
       BLEService peripheralService = peripheral.service("19B10000-E8F2-537E-4F6C-D104768A1214");
 
       if (peripheralService) {
         Serial.println("Found peripheral service");
-        // get the peripheral switch characteristic
         BLECharacteristic peripheralCharacteristic = peripheralService.characteristic("19B10001-E8F2-537E-4F6C-D104768A1214");
 
         if (peripheralCharacteristic) {
@@ -55,33 +53,23 @@ void BLECentralSetup() {
   Serial.begin(9600);
   while (!Serial);
 
-  // begin initialization
   if (!BLE.begin()) {
     Serial.println("Starting Bluetooth Low Energy failed!");
 
     while (1);
   }
 
-  // start scanning for peripherals
   BLE.scan();
   CentralSearch();
 }
 
 void BLEPeripheralSetup(){
-  // set advertised local name and service UUID:
   BLE.setLocalName("Peripheral");
   BLE.setAdvertisedService(PeripheralService);
 
-  // add the characteristic to the service
   PeripheralService.addCharacteristic(PeripheralCharacteristic);
-
-  // add service
   BLE.addService(PeripheralService);
-
-  // set the initial value for the characeristic:
   PeripheralCharacteristic.writeValue(0);
-
-  // start advertising
   BLE.advertise();
 
   Serial.println("BLE Peripheral");
@@ -90,6 +78,7 @@ void BLEPeripheralSetup(){
 
 void PeripherialLoop(){
   bool peripheralConnected = false;
+  Serial.println("Peripheral Loop");
 
   while(!peripheralConnected){
     // listen for Bluetooth Low Energy peripherals to connect:
@@ -98,20 +87,21 @@ void PeripherialLoop(){
     // if a central is connected to peripheral:
     if (central) {
       Serial.print("Connected to central: ");
-      // print the central's MAC address:
       Serial.println(central.address());
 
       // while the central is still connected to peripheral:
       while (central.connected()) {
+        Serial.println("Connected");
         if (PeripheralCharacteristic.written()) {
           Serial.println(PeripheralCharacteristic.value());
         }
       }
 
-      // when the central disconnects, print it out:
       Serial.print(F("Disconnected from central: "));
       Serial.println(central.address());
       peripheralConnected = true;
+    } else {
+      Serial.println("No central connected!!!");
     }
   }
 }
@@ -119,22 +109,21 @@ void PeripherialLoop(){
 void CentralSearch() {
   bool foundPeripheral = false;
   while (!foundPeripheral) {
+      Serial.println("Searching...");
+
     // check if a peripheral has been discovered
     BLEDevice peripheral = BLE.available();
-    Serial.println("Searching...");
 
     if (peripheral) {
-      Serial.println(peripheral.localName());
-      // see if peripheral is device with local name "Peripheral"
+      Serial.print(peripheral.localName());
       if (peripheral.localName() == "Peripheral") {
-        // stop scanning
         BLE.stopScan();
-        Serial1.println("Peripheral found. Connecting ...");
+        Serial.println("Peripheral found. Connecting ...");
 
         sendData(peripheral);
-        foundPeripheral = true;
-        // peripheral disconnected, we are done
-        //while (1);
+        //foundPeripheral = true;
+        // peripheral disconnected
+        while (1);
       }
     }
   }

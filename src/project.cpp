@@ -153,7 +153,7 @@ void setup() {
   Serial.println("Press button to take image\n");
 
   BLECentralSetup();
-  //BLEPeripheralSetup();
+  // BLEPeripheralSetup();
 }
 
 void loop() {
