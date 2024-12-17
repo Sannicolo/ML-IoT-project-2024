@@ -33,7 +33,7 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr) {
 
         if (peripheralCharacteristic) {
           Serial.println("Found peripheral switch characteristic");
-          for (int i = 0; i < 11; i++) {
+          for (int i = 0; i < 5972; i++) {
             Serial.println(WeightBiasPtr[i]);
             uint8_t byteArray[sizeof(float)];
             memcpy(byteArray, &WeightBiasPtr[i], sizeof(float));
@@ -108,8 +108,9 @@ void BLEPeripheralSetup(float *WeightBiasPtr) {
 
 void PeripheralLoop(float *WeightBiasPtr) {
   Serial.println("Peripheral Loop");
+  bool transferComplete = false;
 
-  while (1) {
+  while (!transferComplete) {
     // listen for Bluetooth Low Energy peripherals to connect:
     BLEDevice central = BLE.central();
 
@@ -158,7 +159,7 @@ void PeripheralLoop(float *WeightBiasPtr) {
 
       Serial.print(F("Disconnected from central: "));
       Serial.println(central.address());
-      // peripheralConnected = true;
+      transferComplete = true;
     }
   }
 }

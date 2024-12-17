@@ -160,10 +160,13 @@ void setup() {
     Serial.print(WeightBiasPtr[i]);
     Serial.print(", ");
   } */
-  Serial.println("Test");
+  // Serial.println("Test");
 
-  BLECentralSetup(WeightBiasPtr);
-  // BLEPeripheralSetup(WeightBiasPtr);
+  // BLECentralSetup(WeightBiasPtr);
+  BLEPeripheralSetup(WeightBiasPtr);
+  Serial.println("BLE completed. Unpacking values...");
+  packUnpackVector(1);
+  printAccuracy();
 }
 
 void loop() {
