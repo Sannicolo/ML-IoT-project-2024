@@ -6,203 +6,78 @@ void exploreCharacteristic(BLECharacteristic characteristic);
 void exploreDescriptor(BLEDescriptor descriptor);
 void printData(const unsigned char data[], int length);
 
-void exploreService(BLEService service)
-{
-  // print the UUID of the service
-  Serial.print("Service ");
-  Serial.println(service.uuid());
-
-  // loop the characteristics of the service and explore each
-  for (int i = 0; i < service.characteristicCount(); i++)
-  {
-    BLECharacteristic characteristic = service.characteristic(i);
-
-    exploreCharacteristic(characteristic);
-  }
-}
-
-void explorerPeripheral(BLEDevice peripheral)
-{
+void sendData(BLEDevice peripheral) {
   // connect to the peripheral
   Serial.println("Connecting ...");
 
-  if (peripheral.connect())
-  {
+  if (peripheral.connect()) {
     Serial.println("Connected");
+
+    if (peripheral.discoverAttributes()) {
+      Serial.println("Attribute discovery succeded!");
+    } 
+    else {
+      Serial.println("Attribute discovery failed!");
+      peripheral.disconnect();
+      return;
+    }
+
+    if (peripheral.localName() == "Peripheral") {
+      // get the peripheral service
+      BLEService peripheralService = peripheral.service("19B10000-E8F2-537E-4F6C-D104768A1214");
+
+      if (peripheralService) {
+        Serial.println("Found peripheral service");
+        // get the peripheral switch characteristic
+        BLECharacteristic peripheralCharacteristic = peripheralService.characteristic("19B10001-E8F2-537E-4F6C-D104768A1214");
+
+        if (peripheralCharacteristic) {
+          Serial.println("Found peripheral switch characteristic");
+          peripheralCharacteristic.writeValue((uint8_t)1);
+        }
+      }
+    }
   }
-  else
-  {
+  else {
     Serial.println("Failed to connect!");
     return;
   }
 
-  // discover peripheral attributes
-  Serial.println("Discovering attributes ...");
-  if (peripheral.discoverAttributes())
-  {
-    Serial.println("Attributes discovered");
-  }
-  else
-  {
-    Serial.println("Attribute discovery failed!");
-    peripheral.disconnect();
-    return;
-  }
-
-  // read and print device name of peripheral
-  Serial.println();
-  Serial.print("Device name: ");
-  Serial.println(peripheral.deviceName());
-  Serial.print("Appearance: 0x");
-  Serial.println(peripheral.appearance(), HEX);
-  Serial.println();
-
-  // loop the services of the peripheral and explore each
-  for (int i = 0; i < peripheral.serviceCount(); i++)
-  {
-    BLEService service = peripheral.service(i);
-
-    exploreService(service);
-  }
-
-  if (peripheral.localName() == "Peripheral")
-  {
-    // get the LED service
-    BLEService ledService = peripheral.service("19B10000-E8F2-537E-4F6C-D104768A1214");
-
-    if (ledService)
-    {
-      Serial.println("Found LED service");
-      // get the LED switch characteristic
-      BLECharacteristic switchCharacteristic = ledService.characteristic("19B10001-E8F2-537E-4F6C-D104768A1214");
-
-      if (switchCharacteristic)
-      {
-        Serial.println("Found LED switch characteristic");
-        switchCharacteristic.writeValue((uint8_t)1);
-      }
-    }
-  }
-
-  // we are done exploring, disconnect
   Serial.println("Disconnecting ...");
   peripheral.disconnect();
   Serial.println("Disconnected");
 }
 
-void exploreCharacteristic(BLECharacteristic characteristic)
-{
-  // print the UUID and properties of the characteristic
-  Serial.print("\tCharacteristic ");
-  Serial.print(characteristic.uuid());
-  Serial.print(", properties 0x");
-  Serial.print(characteristic.properties(), HEX);
-
-  // check if the characteristic is readable
-  if (characteristic.canRead())
-  {
-    // read the characteristic value
-    characteristic.read();
-
-    if (characteristic.valueLength() > 0)
-    {
-      // print out the value of the characteristic
-      Serial.print(", value 0x");
-      printData(characteristic.value(), characteristic.valueLength());
-    }
-  }
-  Serial.println();
-
-  // loop the descriptors of the characteristic and explore each
-  for (int i = 0; i < characteristic.descriptorCount(); i++)
-  {
-    BLEDescriptor descriptor = characteristic.descriptor(i);
-
-    exploreDescriptor(descriptor);
-  }
-}
-
-void exploreDescriptor(BLEDescriptor descriptor)
-{
-  // print the UUID of the descriptor
-  Serial.print("\t\tDescriptor ");
-  Serial.print(descriptor.uuid());
-
-  // read the descriptor value
-  descriptor.read();
-
-  // print out the value of the descriptor
-  Serial.print(", value 0x");
-  printData(descriptor.value(), descriptor.valueLength());
-
-  Serial.println();
-}
-
-void printData(const unsigned char data[], int length)
-{
-  for (int i = 0; i < length; i++)
-  {
-    unsigned char b = data[i];
-
-    if (b < 16)
-    {
-      Serial.print("0");
-    }
-
-    Serial.print(b, HEX);
-  }
-}
-
-void setup()
-{
+void setup() {
   Serial.begin(9600);
-  while (!Serial)
-    ;
+  while (!Serial);
 
   // begin initialization
-  if (!BLE.begin())
-  {
-    Serial.println("starting Bluetooth® Low Energy module failed!");
+  if (!BLE.begin()) {
+    Serial.println("Starting Bluetooth Low Energy failed!");
 
-    while (1)
-      ;
+    while (1);
   }
-
-  Serial.println("Bluetooth® Low Energy Central - Peripheral Explorer");
 
   // start scanning for peripherals
   BLE.scan();
 }
 
-void loop()
-{
+void loop() {
   // check if a peripheral has been discovered
   BLEDevice peripheral = BLE.available();
+  Serial.println("Searching...");
 
-  if (peripheral)
-  {
-    // discovered a peripheral, print out address, local name, and advertised service
-    Serial.print("Found ");
-    Serial.print(peripheral.address());
-    Serial.print(" '");
-    Serial.print(peripheral.localName());
-    Serial.print("' ");
-    Serial.print(peripheral.advertisedServiceUuid());
-    Serial.println();
-
+  if (peripheral) {
     // see if peripheral is device with local name "Peripheral"
-    if (peripheral.localName() == "Peripheral")
-    {
+    if (peripheral.localName() == "Peripheral") {
       // stop scanning
       BLE.stopScan();
 
-      explorerPeripheral(peripheral);
+      sendData(peripheral);
 
       // peripheral disconnected, we are done
-      while (1)
-      {
-        // do nothing
-      }
+      while (1);
     }
   }
 }
