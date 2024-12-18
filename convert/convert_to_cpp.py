@@ -26,10 +26,6 @@ validation_labels_cpp = npy_to_cpp_array('validation_labels.npy', 'validation_la
 
 # Write the data to a header file
 with open('data.h', 'w') as f:
-    # f.write('// Data file\n')
-    # f.write('const int first_layer_input_cnt = 3136;\n')
-    # f.write('const int train_data_cnt = 12;\n')
-    # f.write('const int classes_cnt = 2;\n\n')
     f.write(train_labels_cpp)
     f.write(train_data_cpp)
     f.write(validation_labels_cpp)

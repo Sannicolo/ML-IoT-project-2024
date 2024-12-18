@@ -17,13 +17,13 @@ byte image[160 * 120 * 2]; // QQVGA: 160x120 x 2 bytes per pixel (RGB565)
 float resizedImage[24 * 24];
 int bytesPerFrame;
 
-#define CENTRAL_OR_PERIPHERAL 0 // 0 for central, 1 for peripheral
+#define CENTRAL_OR_PERIPHERAL 0     // 0 for central, 1 for peripheral
 
 // You define your network in NN_def
 // Right now, the network consists of three layers:
-// 1. An input layer with the size of your input as defined in the variable first_layer_input_cnt in cnn_data.h
-// 2. A hidden layer with 14 nodes
-// 3. An output layer with as many classes as you defined in the variable classes_cnt in cnn_data.h
+// 1. An input layer with the size of your input as defined in the variable first_layer_input_cnt in data-central.h/data-peripheral.h
+// 2. A hidden layer with 10 nodes
+// 3. An output layer with as many classes as you defined in the variable classes_cnt in data-central.h/data-peripheral.h
 static const unsigned int NN_def[] = {first_layer_input_cnt, 10, classes_cnt};
 
 #include "data-central.h" // The data, labels and the sizes of all objects are stored here
@@ -33,10 +33,8 @@ int iter_cnt = 0; // This keeps track of the number of epochs you've trained on 
 #define DEBUG 0   // This prints the weights of your network in case you want to do debugging (set to 1 if you want to see that)
 
 // Converts the RGB565 image to grayscale
-void convertToGrayscale(byte *image)
-{
-  for (int i = 0; i < bytesPerFrame; i += 2)
-  {
+void convertToGrayscale(byte *image) {
+  for (int i = 0; i < bytesPerFrame; i += 2) {
     uint16_t pixel = (image[i] << 8) | image[i + 1];
     uint8_t r = (pixel >> 11) & 0x1F;
     uint8_t g = (pixel >> 5) & 0x3F;
@@ -47,18 +45,15 @@ void convertToGrayscale(byte *image)
 }
 
 // Resizes the image to desired size (24x24)
-void resizeImage()
-{
+void resizeImage() {
   int srcWidth = 160;
   int srcHeight = 120;
   int destWidth = 24;
   int destHeight = 24;
   float xRatio = srcWidth / (float)destWidth;
   float yRatio = srcHeight / (float)destHeight;
-  for (int y = 0; y < destHeight; y++)
-  {
-    for (int x = 0; x < destWidth; x++)
-    {
+  for (int y = 0; y < destHeight; y++) {
+    for (int x = 0; x < destWidth; x++) {
       int srcX = (int)(x * xRatio);
       int srcY = (int)(y * yRatio);
       resizedImage[y * destWidth + x] = image[srcY * srcWidth + srcX] / 255.0;
@@ -67,14 +62,11 @@ void resizeImage()
 }
 
 // Prints the image array
-void printFloatArray()
-{
+void printFloatArray() {
   Serial.print("[");
-  for (int i = 0; i < 24 * 24; i++)
-  {
+  for (int i = 0; i < 24 * 24; i++) {
     Serial.print(resizedImage[i], 3);
-    if (i != 24 * 24 - 1)
-    {
+    if (i != 24 * 24 - 1) {
       Serial.print(", ");
     }
   }
@@ -82,8 +74,7 @@ void printFloatArray()
 }
 
 // This function contains your training loop
-void do_training()
-{
+void do_training() {
 
   // Print the epoch number
   Serial.print("Epoch count (training count): ");
@@ -94,8 +85,7 @@ void do_training()
   shuffleIndx();
 
   // starting forward + Backward propagation
-  for (int j = 0; j < numTrainData; j++)
-  {
+  for (int j = 0; j < numTrainData; j++) {
     generateTrainVectors(j);
     forwardProp();
     backwardProp();
@@ -105,10 +95,9 @@ void do_training()
   printAccuracy();
 }
 
-void classifyImage()
-{
-  for (int i = 0; i < IN_VEC_SIZE; i++)
-  {
+// Classifies the images taken with the camera
+void classifyImage() {
+  for (int i = 0; i < IN_VEC_SIZE; i++) {
     input[i] = resizedImage[i];
   }
 
@@ -118,30 +107,25 @@ void classifyImage()
   Serial.print(" ");
   Serial.println(y[1]);
 
-  if (y[0] > y[1])
-  {
+  if (y[0] > y[1]) {
     maxIndx = 0;
   }
-  else
-  {
+  else {
     maxIndx = 1;
   }
 
   Serial.print("Classified class: "); // 0 = banana, 1 = tomato
   Serial.println(maxIndx);
-  if (maxIndx == 0)
-  {
+  
+  if (maxIndx == 0) {
     Serial.println("Confidence: " + String(y[0]));
   }
-  else
-  {
+  else {
     Serial.println("Confidence: " + String(y[1]));
   }
 }
 
-void setup()
-{
-  // put your setup code here, to run once:
+void setup() {
 
   // Initialize random seed
   srand(0);
@@ -150,8 +134,7 @@ void setup()
 
   delay(5000);
 
-  while (!Serial)
-    ;
+  while (!Serial);
 
   // Initialize the TinyML Shield
   initializeShield();
@@ -172,14 +155,11 @@ void setup()
   // Serial.println("Use the on-shield button to start and stop the loop code ");
   Serial.println("Training the network locally with: " + String(EPOCH_RUN) + " epochs");
 
-  for (int epoch = 0; epoch < EPOCH_RUN; epoch++)
-  {
+  for (int epoch = 0; epoch < EPOCH_RUN; epoch++) {
     do_training();
   }
 
-  if (!Camera.begin(QQVGA, RGB565, 1, OV7675))
-  {
-    // QCIF, QQVGA
+  if (!Camera.begin(QQVGA, RGB565, 1, OV7675)) {
     Serial.println("Failed to initialize camera");
     while (1);
   }
@@ -188,12 +168,11 @@ void setup()
   Serial.println(" ");
   Serial.println("Starting Federated Learning between two nodes (Central and Peripheral)");
 
-  if (CENTRAL_OR_PERIPHERAL == 0)
-  {
+  if (CENTRAL_OR_PERIPHERAL == 0) {
     // Central
     Serial.println("Central Device");
     Serial.println("Packing weights and biases for BLE transfer...");
-    packUnpackVector(0);
+    packUnpackVector(0);  // PACK
     Serial.println("Packing completed. Starting BLE transfer...");
     BLECentralSetup(WeightBiasPtr);
     Serial.println("BLE transfer completed.");
@@ -211,14 +190,13 @@ void setup()
     Serial.println("Unpacking completed. Printing updated accuracy:");
     printAccuracy();
   }
-  else
-  {
+  else {
     // Peripheral
     Serial.println("Peripheral Device");
     Serial.println("Waiting for BLE transfer...");
     BLEPeripheralSetup(WeightBiasPtr);
     Serial.println("BLE transfer completed. Unpacking values...");
-    packUnpackVector(2); // AVERAGE, set 1 for just UNPACK
+    packUnpackVector(2); // AVERAGE
     Serial.println("Unpacking completed. Printing updated accuracy:");
     printAccuracy();
 
@@ -226,7 +204,7 @@ void setup()
     delay(5000);
 
     Serial.println("Packing and sending weights and biases for BLE transfer...");
-    // packUnpackVector(0);
+    // packUnpackVector(0);  // PACK
     BLECentralSetup(WeightBiasPtr);
     Serial.println("BLE transfer completed.");
   }
@@ -234,13 +212,11 @@ void setup()
   Serial.println("Press the button to take in image");
 }
 
-void loop()
-{
+void loop() {
 
   bool clicked = readShieldButton();
 
-  if (clicked)
-  {
+  if (clicked) {
     Serial.print("Button clicked\n");
     Camera.readFrame(image);
     convertToGrayscale(image);
