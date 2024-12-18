@@ -364,11 +364,11 @@ void packUnpackVector(int Type)
       }
     }
 
-	for (unsigned int i = 0; i < 11; i++) {
+	/* for (unsigned int i = 0; i < 11; i++) {
 		Serial.print(WeightBiasPtr[i+1000]);
 		Serial.print(" ");
 	}
-	Serial.println(" ");
+	Serial.println(" "); */
 
     Serial.print("Total count when packing:");
     Serial.println(ptrCount);
