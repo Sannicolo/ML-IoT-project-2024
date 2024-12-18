@@ -29,15 +29,15 @@ def split_data(data, labels, train_size, val_size, test_size):
     return (train_data, train_labels), (val_data, val_labels), (test_data, test_labels)
 
 # Load and split banana data
-banana_data, banana_labels = convert_images_to_arrays('/Users/kaansirin/Downloads/dataset 2/banana-new', label=0)
+banana_data, banana_labels = convert_images_to_arrays('/Users/kaansirin/Desktop/banana-2', label=0)
 (train_banana_data, train_banana_labels), (val_banana_data, val_banana_labels), (test_banana_data, test_banana_labels) = split_data(
-    banana_data, banana_labels, train_size=49, val_size=15, test_size=6
+    banana_data, banana_labels, train_size=35, val_size=20, test_size=15
 )
 
 # Load and split tomato data
-tomato_data, tomato_labels = convert_images_to_arrays('/Users/kaansirin/Downloads/dataset 2/tomato-new', label=1)
+tomato_data, tomato_labels = convert_images_to_arrays('/Users/kaansirin/Desktop/tomato-2.1', label=1)
 (train_tomato_data, train_tomato_labels), (val_tomato_data, val_tomato_labels), (test_tomato_data, test_tomato_labels) = split_data(
-    tomato_data, tomato_labels, train_size=49, val_size=15, test_size=6
+    tomato_data, tomato_labels, train_size=35, val_size=20, test_size=15
 )
 
 # Combine training, validation, and test data
