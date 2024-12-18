@@ -5,10 +5,10 @@
 #include "BLE_Communication.h"
 
 // NN parameters, set these yourself!
-#define LEARNING_RATE 0.01 // The learning rate used to train your network
+#define LEARNING_RATE 0.05 // The learning rate used to train your network
 #define EPOCH 50           // The maximum number of epochs
 #define DATA_TYPE_FLOAT    // The data type used: Set this to DATA_TYPE_DOUBLE for higher precision. However, it is better to keep this Float if you want to submit the result via BT
-#define EPOCH_RUN 20       // epochs to run during local training
+#define EPOCH_RUN 15       // epochs to run during local training
 extern const int first_layer_input_cnt;
 extern const int classes_cnt;
 
@@ -24,9 +24,9 @@ int bytesPerFrame;
 // 1. An input layer with the size of your input as defined in the variable first_layer_input_cnt in cnn_data.h
 // 2. A hidden layer with 14 nodes
 // 3. An output layer with as many classes as you defined in the variable classes_cnt in cnn_data.h
-static const unsigned int NN_def[] = {first_layer_input_cnt, 14, classes_cnt};
+static const unsigned int NN_def[] = {first_layer_input_cnt, 10, classes_cnt};
 
-#include "data-peripheral.h" // The data, labels and the sizes of all objects are stored here
+#include "data-central.h" // The data, labels and the sizes of all objects are stored here
 #include "NN_functions.h" // All NN functions are stored here
 
 int iter_cnt = 0; // This keeps track of the number of epochs you've trained on the Arduino

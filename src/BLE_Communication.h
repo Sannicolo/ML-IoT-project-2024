@@ -40,23 +40,10 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr)
         if (peripheralCharacteristic)
         {
           Serial.println("Found peripheral switch characteristic");
-          for (int i = 0; i < 8108; i++)
+          for (int i = 0; i < 5792; i++)
           {
             uint8_t byteArray[sizeof(float)];
             memcpy(byteArray, &WeightBiasPtr[i], sizeof(float));
-            //delay(10);
-
-            // Debug: Print byte array content before transmission
-            /* Serial.print("Sending byte array: ");
-            for (int j = 0; j < sizeof(float); j++) {
-              uint8_t byteValue = byteArray[j];
-              if (byteValue < 0x10) {
-                Serial.print("0");
-              }
-              Serial.print(byteValue, HEX);
-              Serial.print(" ");
-            }
-            Serial.println(); */
 
             Serial.print("Sending value: ");
             Serial.print(i + 1);
@@ -119,7 +106,6 @@ void BLEPeripheralSetup(float *WeightBiasPtr)
 
   PeripheralService.addCharacteristic(PeripheralCharacteristic);
   BLE.addService(PeripheralService);
-  // PeripheralCharacteristic.writeValue(0);
   BLE.advertise();
 
   Serial.println("BLE Peripheral");
@@ -150,31 +136,15 @@ void PeripheralLoop(float *WeightBiasPtr)
 
         if (PeripheralCharacteristic.written())
         {
-          // Serial.println(PeripheralCharacteristic.value());
-          //  Assuming you have the byte array received from the peripheralCharacteristic
-          //  Assuming you have a method to get the value as a byte array
-          // Assuming you have a method to get the value as a byte array
+
           uint8_t byteArray[sizeof(float)];
           PeripheralCharacteristic.readValue(byteArray, sizeof(float));
-
-          // Debug: Print byte array content after reception
-          // Serial.print("Received byte array: ");
-          /* for (int i = 0; i < sizeof(float); i++) {
-            uint8_t byteValue = byteArray[i];
-            if (byteValue < 0x10) {
-              Serial.print("0");
-            }
-            Serial.print(byteValue, HEX);
-            Serial.print(" ");
-          } */
-          // Serial.println();
 
           // Convert the byte array back to a float
           float receivedFloat;
           memcpy(&receivedFloat, byteArray, sizeof(float));
 
           // Print the received float value
-          
           Serial.print("Receiving value: ");
           Serial.print(count + 1);
           Serial.print(" ");
@@ -203,7 +173,6 @@ void CentralSearch(float *WeightBiasPtr)
 
     if (peripheral)
     {
-      // Serial.print(peripheral.localName());
       if (peripheral.localName() == "Peripheral")
       {
         BLE.stopScan();
@@ -211,9 +180,7 @@ void CentralSearch(float *WeightBiasPtr)
 
         sendData(peripheral, WeightBiasPtr);
         foundPeripheral = true;
-        //  peripheral disconnected
-        /* while (1)
-          ; */
+
       }
     }
   }
