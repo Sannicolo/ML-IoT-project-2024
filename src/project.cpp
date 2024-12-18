@@ -136,7 +136,6 @@ void setup()
 
   Serial.begin(9600);
 
-  delay(5000);
   while (!Serial)
     ;
 
@@ -153,7 +152,7 @@ void setup()
   DATA_TYPE *WeightBiasPtrOriginal = (DATA_TYPE *)calloc(weights_bias_cnt, sizeof(DATA_TYPE));
 
   setupNN(WeightBiasPtrOriginal); // CREATES THE NETWORK BASED ON NN_def[]
-  Serial.print("The accuracy before training");
+  Serial.println("The accuracy before training");
   printAccuracy();
 
   // Serial.println("Use the on-shield button to start and stop the loop code ");
@@ -173,7 +172,8 @@ void setup()
   }
   bytesPerFrame = Camera.width() * Camera.height() * Camera.bytesPerPixel();
 
-  Serial.println("Starting Federated Learning between two nodes (Central and Peripheral"); 
+  Serial.println(" "); 
+  Serial.println("Starting Federated Learning between two nodes (Central and Peripheral)"); 
 
   if (CENTRAL_OR_PERIPHERAL == 0)
   {

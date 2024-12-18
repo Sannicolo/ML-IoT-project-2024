@@ -44,7 +44,7 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr)
           {
             uint8_t byteArray[sizeof(float)];
             memcpy(byteArray, &WeightBiasPtr[i], sizeof(float));
-            delay(10);
+            //delay(10);
 
             // Debug: Print byte array content before transmission
             /* Serial.print("Sending byte array: ");
@@ -203,17 +203,17 @@ void CentralSearch(float *WeightBiasPtr)
 
     if (peripheral)
     {
-      Serial.print(peripheral.localName());
+      // Serial.print(peripheral.localName());
       if (peripheral.localName() == "Peripheral")
       {
         BLE.stopScan();
         Serial.println("Peripheral found. Connecting ...");
 
         sendData(peripheral, WeightBiasPtr);
-        // foundPeripheral = true;
+        foundPeripheral = true;
         //  peripheral disconnected
-        while (1)
-          ;
+        /* while (1)
+          ; */
       }
     }
   }
