@@ -138,6 +138,7 @@ void createNetwork() {
 		indxArray[i] = i;
 	}
 
+
 }
 
 
@@ -364,7 +365,7 @@ void packUnpackVector(int Type)
     }
 
 	for (unsigned int i = 0; i < 11; i++) {
-		Serial.print(WeightBiasPtr[i]);
+		Serial.print(WeightBiasPtr[i+1000]);
 		Serial.print(" ");
 	}
 	Serial.println(" ");
@@ -386,21 +387,21 @@ void packUnpackVector(int Type)
       }
     }
 
-	for (unsigned int i = 0; i < 11; i++) {
-		Serial.print(WeightBiasPtr[i]);
+	/* for (unsigned int i = 0; i < 11; i++) {
+		Serial.print(WeightBiasPtr[i+1000]);
 		Serial.print(" ");
 	}
-	Serial.println(" ");
+	Serial.println(" "); */
 
   } else if (Type == AVERAGE) {
     // Propagating through network, we store all weights first and then bias.
     // we start with left most layer, and top most node or lowest to highest index
-	for (unsigned int i = 0; i < 11; i++) {
-		Serial.print(WeightBiasPtr[i]);
+	/* for (unsigned int i = 0; i < 11; i++) {
+		Serial.print(WeightBiasPtr[i+1000]);
 		Serial.print(" ");
 	}
-	Serial.println(" ");
-	
+	Serial.println(" "); */
+
     for (unsigned int i = 1; i < numLayers; i++) {
       for (unsigned int j = 0; j < NN_def[i]; j++) {
         for (unsigned int k = 0; k < L[i].Neu[j].numInput; k++) {
@@ -414,11 +415,11 @@ void packUnpackVector(int Type)
       }
     }
 
-	for (unsigned int i = 0; i < 11; i++) {
-		Serial.print(WeightBiasPtr[i]);
+	/* for (unsigned int i = 0; i < 11; i++) {
+		Serial.print(WeightBiasPtr[i+1000]);
 		Serial.print(" ");
 	}
-	Serial.println(" ");
+	Serial.println(" "); */
   }
 }
 

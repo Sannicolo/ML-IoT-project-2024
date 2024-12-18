@@ -17,10 +17,11 @@ def read_serial_data():
             continue
         elif line.startswith("Printing image..."):
             data = list(map(float, line.split('[')[1].split(']')[0].split(',')))
-            print(data)
+            continue
         elif line.startswith("Classified class"):
             classified_class = int(line.split()[-1])
-        elif line.startswith("Condifence:"):
+            continue
+        elif line.startswith("Confidence:"):
             confidence = float(line.split()[-1])
             break
     return data, classified_class, confidence
@@ -39,7 +40,7 @@ while True:
     ax.axis('off')
 
     # Add label
-    label = f"Prediction: Banana (Confidence: {confidence:.2f})" if classified_class == 0 else f"Prediction: Tomato (Confidence: {confidence:.2f})"
+    label = f"Prediction: Banana (confidence: {confidence:.2f})" if classified_class == 0 else f"Prediction: Tomato (confidence: {confidence:.2f})"
     ax.set_title(label)
 
     plt.draw()

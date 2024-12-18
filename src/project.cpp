@@ -5,15 +5,15 @@
 #include "BLE_Communication.h"
 
 // NN parameters, set these yourself!
-#define LEARNING_RATE 0.01 // The learning rate used to train your network
+#define LEARNING_RATE 0.05 // The learning rate used to train your network
 #define EPOCH 50           // The maximum number of epochs
 #define DATA_TYPE_FLOAT    // The data type used: Set this to DATA_TYPE_DOUBLE for higher precision. However, it is better to keep this Float if you want to submit the result via BT
-#define EPOCH_RUN 10        // epochs to run during local training
+#define EPOCH_RUN 20       // epochs to run during local training
 extern const int first_layer_input_cnt;
 extern const int classes_cnt;
 
 // Camera parameters and image processing
-byte image[160 * 120 * 2]; // 160x120 x 2 bytes per pixel (RGB565)
+byte image[160 * 120 * 2]; // QQVGA: 160x120 x 2 bytes per pixel (RGB565)
 float resizedImage[24 * 24];
 int bytesPerFrame;
 
@@ -24,9 +24,9 @@ int bytesPerFrame;
 // 1. An input layer with the size of your input as defined in the variable first_layer_input_cnt in cnn_data.h
 // 2. A hidden layer with 14 nodes
 // 3. An output layer with as many classes as you defined in the variable classes_cnt in cnn_data.h
-static const unsigned int NN_def[] = {first_layer_input_cnt, 10, classes_cnt};
+static const unsigned int NN_def[] = {first_layer_input_cnt, 14, classes_cnt};
 
-#include "data-central.h" // The data, labels and the sizes of all objects are stored here
+#include "data-peripheral.h" // The data, labels and the sizes of all objects are stored here
 #include "NN_functions.h" // All NN functions are stored here
 
 int iter_cnt = 0; // This keeps track of the number of epochs you've trained on the Arduino
@@ -114,6 +114,9 @@ void classifyImage()
 
   forwardProp();
   int maxIndx = 0;
+  Serial.print(y[0]);
+  Serial.print(" ");
+  Serial.println(y[1]);
 
   if (y[0] > y[1])
   {
@@ -125,6 +128,7 @@ void classifyImage()
   }
 
   Serial.print("Classified class: "); // 0 = banana, 1 = tomato
+  Serial.println(maxIndx);
   if (maxIndx == 0)
   {
     Serial.println("Confidence: " + String(y[0]));
@@ -159,9 +163,9 @@ void setup()
   Serial.println(weights_bias_cnt);
 
   // Allocate common weight vector, and pass to setupNN
-  DATA_TYPE *WeightBiasPtrOriginal = (DATA_TYPE *)calloc(weights_bias_cnt, sizeof(DATA_TYPE));
+  DATA_TYPE *WeightBiasPtr = (DATA_TYPE *)calloc(weights_bias_cnt, sizeof(DATA_TYPE));
 
-  setupNN(WeightBiasPtrOriginal); // CREATES THE NETWORK BASED ON NN_def[]
+  setupNN(WeightBiasPtr); // CREATES THE NETWORK BASED ON NN_def[]
   Serial.println("The accuracy before training");
   printAccuracy();
 
@@ -177,8 +181,7 @@ void setup()
   {
     // QCIF, QQVGA
     Serial.println("Failed to initialize camera");
-    while (1)
-      ;
+    while (1);
   }
   bytesPerFrame = Camera.width() * Camera.height() * Camera.bytesPerPixel();
 
@@ -194,6 +197,7 @@ void setup()
     Serial.println("Packing completed. Starting BLE transfer...");
     BLECentralSetup(WeightBiasPtr);
     Serial.println("BLE transfer completed.");
+    printAccuracy();
 
     Serial.println("Swapping role to Peripheral Device...");
     delay(5000);
@@ -222,7 +226,7 @@ void setup()
     delay(5000);
 
     Serial.println("Packing and sending weights and biases for BLE transfer...");
-    packUnpackVector(0);
+    // packUnpackVector(0);
     BLECentralSetup(WeightBiasPtr);
     Serial.println("BLE transfer completed.");
   }

@@ -40,7 +40,7 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr)
         if (peripheralCharacteristic)
         {
           Serial.println("Found peripheral switch characteristic");
-          for (int i = 0; i < 5972; i++)
+          for (int i = 0; i < 5792; i++)
           {
             uint8_t byteArray[sizeof(float)];
             memcpy(byteArray, &WeightBiasPtr[i], sizeof(float));
