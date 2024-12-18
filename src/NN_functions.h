@@ -68,15 +68,12 @@ DATA_TYPE AccFunction (unsigned int layerIndx, int nodeIndx) {
 	DATA_TYPE A = 0;
 
 	for (int k = 0; k < NN_def[layerIndx - 1]; k++) {
-
-	// updating weights/bais and resetting gradient value if non-zero
-	if (L[layerIndx].Neu[nodeIndx].dW[k] != 0.0 ) {
-		L[layerIndx].Neu[nodeIndx].W[k] += L[layerIndx].Neu[nodeIndx].dW[k];
-		L[layerIndx].Neu[nodeIndx].dW[k] = 0.0;
-	}
-
-	A += L[layerIndx].Neu[nodeIndx].W[k] * L[layerIndx - 1].Neu[k].X;
-
+		// updating weights/bais and resetting gradient value if non-zero
+		if (L[layerIndx].Neu[nodeIndx].dW[k] != 0.0 ) {
+			L[layerIndx].Neu[nodeIndx].W[k] += L[layerIndx].Neu[nodeIndx].dW[k];
+			L[layerIndx].Neu[nodeIndx].dW[k] = 0.0;
+		}
+		A += L[layerIndx].Neu[nodeIndx].W[k] * L[layerIndx - 1].Neu[k].X;
 	}
 
 	if (L[layerIndx].Neu[nodeIndx].dB != 0.0 ) {
@@ -137,8 +134,6 @@ void createNetwork() {
 	for (unsigned int i = 0; i <  numTrainData; i ++ ) {
 		indxArray[i] = i;
 	}
-
-
 }
 
 
@@ -211,7 +206,7 @@ void forwardProp() {
 		Fsum += y[j];
 	}
 
-  // final normalizing for softmax
+  	// final normalizing for softmax
 	for (unsigned int j = 0; j < NN_def[numLayers-1];j++) {
 		y[j] = y[j]/Fsum;
 	}
@@ -248,8 +243,7 @@ void generateTrainVectors(int indx) {
 
 }
 
-void shuffleIndx()
-{
+void shuffleIndx() {
   for (unsigned int i = 0; i < train_data_cnt - 1; i++)
   {
     size_t j = i + rand() / (RAND_MAX / (train_data_cnt - i) + 1);
@@ -259,8 +253,7 @@ void shuffleIndx()
   }
 }
 
-int calcTotalWeightsBias()
-{
+int calcTotalWeightsBias() {
 	int Count = 0;
 	for (unsigned int i = 0; i < numLayers - 1; i++) {
 		Count += NN_def[i] * NN_def[i + 1] + NN_def[i + 1];
@@ -269,8 +262,7 @@ int calcTotalWeightsBias()
 	return Count;
 }
 
-void printAccuracy()
-{
+void printAccuracy() {
   // checking accuracy if training data
   int correctCount = 0;
 
@@ -347,8 +339,7 @@ void printAccuracy()
 // 0 -> pack vector for creating vector based on local NN for bluetooth transmission
 // 1 -> unpack vector for updating weights on local NN after receiving vector via bluetooth transmission
 // 2 -> average between values in pointer and location network values, and update both local NN and pointer value
-void packUnpackVector(int Type)
-{
+void packUnpackVector(int Type) {
   unsigned int ptrCount = 0;
   if (Type == PACK) {
     // Propagating through network, we store all weights first and then bias.

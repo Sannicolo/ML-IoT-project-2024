@@ -2,8 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import serial
 
-# Configure the serial port
-ser = serial.Serial('/dev/cu.usbmodem1101', 9600)  # Update with your serial port and baud rate
+ser = serial.Serial('/dev/cu.usbmodem1101', 9600) 
 
 def read_serial_data():
     data = []
@@ -26,7 +25,7 @@ def read_serial_data():
             break
     return data, classified_class, confidence
 
-plt.ion()  # Turn on interactive mode
+plt.ion()  
 fig, ax = plt.subplots()
 
 while True:

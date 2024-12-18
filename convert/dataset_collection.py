@@ -4,12 +4,10 @@ import matplotlib.pyplot as plt
 import serial
 
 
-""" Script to collect images manually. Not used in final project. 
- """
+""" Script to collect images manually. Not used in final project. """
 
 
-# Configure the serial port
-ser = serial.Serial('/dev/cu.usbmodem11101', 9600)  # Update with your serial port and baud rate
+ser = serial.Serial('/dev/cu.usbmodem11101', 9600)
 
 def read_serial_data():
     data = []
@@ -31,10 +29,9 @@ def read_serial_data():
             break
     return data, classified_class
 
-plt.ion()  # Turn on interactive mode
+plt.ion()  
 fig, ax = plt.subplots()
 
-# Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 while True:
@@ -52,9 +49,9 @@ while True:
     ax.set_title(label)
 
     plt.draw()
-    plt.pause(0.1)  # Pause to allow the plot to update
+    plt.pause(0.1) 
 
-    # Ask for user input to accept or reject the data
+    # User input to accept or reject the data
     user_input = input("Enter 1 to accept or 2 to reject: ")
     if user_input == '1':
         # Save the data to a text file
