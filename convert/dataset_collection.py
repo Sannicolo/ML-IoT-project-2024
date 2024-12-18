@@ -3,6 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import serial
 
+
+""" Script to collect images manually. Not used in final project. 
+ """
+
+
 # Configure the serial port
 ser = serial.Serial('/dev/cu.usbmodem11101', 9600)  # Update with your serial port and baud rate
 
