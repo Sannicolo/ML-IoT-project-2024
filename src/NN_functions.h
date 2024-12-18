@@ -363,6 +363,12 @@ void packUnpackVector(int Type)
       }
     }
 
+	for (unsigned int i = 0; i < 11; i++) {
+		Serial.print(WeightBiasPtr[i]);
+		Serial.print(" ");
+	}
+	Serial.println(" ");
+
     Serial.print("Total count when packing:");
     Serial.println(ptrCount);
 
@@ -379,9 +385,22 @@ void packUnpackVector(int Type)
         ptrCount += 1;
       }
     }
+
+	for (unsigned int i = 0; i < 11; i++) {
+		Serial.print(WeightBiasPtr[i]);
+		Serial.print(" ");
+	}
+	Serial.println(" ");
+
   } else if (Type == AVERAGE) {
     // Propagating through network, we store all weights first and then bias.
     // we start with left most layer, and top most node or lowest to highest index
+	for (unsigned int i = 0; i < 11; i++) {
+		Serial.print(WeightBiasPtr[i]);
+		Serial.print(" ");
+	}
+	Serial.println(" ");
+	
     for (unsigned int i = 1; i < numLayers; i++) {
       for (unsigned int j = 0; j < NN_def[i]; j++) {
         for (unsigned int k = 0; k < L[i].Neu[j].numInput; k++) {
@@ -394,6 +413,12 @@ void packUnpackVector(int Type)
         ptrCount += 1;
       }
     }
+
+	for (unsigned int i = 0; i < 11; i++) {
+		Serial.print(WeightBiasPtr[i]);
+		Serial.print(" ");
+	}
+	Serial.println(" ");
   }
 }
 

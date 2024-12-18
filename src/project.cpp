@@ -8,12 +8,12 @@
 #define LEARNING_RATE 0.01 // The learning rate used to train your network
 #define EPOCH 50           // The maximum number of epochs
 #define DATA_TYPE_FLOAT    // The data type used: Set this to DATA_TYPE_DOUBLE for higher precision. However, it is better to keep this Float if you want to submit the result via BT
-#define EPOCH_RUN 9        // epochs to run during local training
+#define EPOCH_RUN 10        // epochs to run during local training
 extern const int first_layer_input_cnt;
 extern const int classes_cnt;
 
 // Camera parameters and image processing
-byte image[160 * 120 * 2]; // QCIF: 176x144 x 2 bytes per pixel (RGB565)
+byte image[160 * 120 * 2]; // 160x120 x 2 bytes per pixel (RGB565)
 float resizedImage[24 * 24];
 int bytesPerFrame;
 
@@ -22,11 +22,12 @@ int bytesPerFrame;
 // You define your network in NN_def
 // Right now, the network consists of three layers:
 // 1. An input layer with the size of your input as defined in the variable first_layer_input_cnt in cnn_data.h
-// 2. A hidden layer with 20 nodes
+// 2. A hidden layer with 14 nodes
 // 3. An output layer with as many classes as you defined in the variable classes_cnt in cnn_data.h
-static const unsigned int NN_def[] = {first_layer_input_cnt, 10, classes_cnt};
-#include "data-more-test.h" // The data, labels and the sizes of all objects are stored here
-#include "NN_functions.h"   // All NN functions are stored here
+static const unsigned int NN_def[] = {first_layer_input_cnt, 14, classes_cnt};
+
+#include "data-central.h" // The data, labels and the sizes of all objects are stored here
+#include "NN_functions.h" // All NN functions are stored here
 
 int iter_cnt = 0; // This keeps track of the number of epochs you've trained on the Arduino
 #define DEBUG 0   // This prints the weights of your network in case you want to do debugging (set to 1 if you want to see that)
@@ -124,7 +125,14 @@ void classifyImage()
   }
 
   Serial.print("Classified class: "); // 0 = banana, 1 = tomato
-  Serial.println(maxIndx);
+  if (maxIndx == 0)
+  {
+    Serial.println("Confidence: " + String(y[0]));
+  }
+  else
+  {
+    Serial.println("Confidence: " + String(y[1]));
+  }
 }
 
 void setup()
@@ -172,8 +180,8 @@ void setup()
   }
   bytesPerFrame = Camera.width() * Camera.height() * Camera.bytesPerPixel();
 
-  Serial.println(" "); 
-  Serial.println("Starting Federated Learning between two nodes (Central and Peripheral)"); 
+  Serial.println(" ");
+  Serial.println("Starting Federated Learning between two nodes (Central and Peripheral)");
 
   if (CENTRAL_OR_PERIPHERAL == 0)
   {
@@ -190,11 +198,12 @@ void setup()
 
     Serial.println("Waiting for BLE transfer...");
     BLEPeripheralSetup(WeightBiasPtr);
+    delay(5000);
     Serial.println("BLE transfer completed. Unpacking values...");
     packUnpackVector(1); // UNPACK
+    delay(5000);
     Serial.println("Unpacking completed. Printing updated accuracy:");
     printAccuracy();
-
   }
   else
   {
@@ -209,12 +218,11 @@ void setup()
 
     Serial.println("Swapping role to Central Device...");
     delay(5000);
-    
+
     Serial.println("Packing and sending weights and biases for BLE transfer...");
     packUnpackVector(0);
     BLECentralSetup(WeightBiasPtr);
     Serial.println("BLE transfer completed.");
-
   }
 
   Serial.println("Press the button to take in image");
@@ -230,9 +238,8 @@ void loop()
     Serial.print("Button clicked\n");
     Camera.readFrame(image);
     convertToGrayscale(image);
-    Serial.print("grayscale");
     resizeImage();
-    Serial.print("after resize");
+    Serial.print("Printing image...");
     printFloatArray();
     classifyImage();
   }

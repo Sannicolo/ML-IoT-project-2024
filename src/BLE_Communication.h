@@ -40,7 +40,7 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr)
         if (peripheralCharacteristic)
         {
           Serial.println("Found peripheral switch characteristic");
-          for (int i = 1; i <= 5972; i++)
+          for (int i = 0; i < 5972; i++)
           {
             uint8_t byteArray[sizeof(float)];
             memcpy(byteArray, &WeightBiasPtr[i], sizeof(float));
@@ -59,7 +59,7 @@ void sendData(BLEDevice peripheral, float *WeightBiasPtr)
             Serial.println(); */
 
             Serial.print("Sending value: ");
-            Serial.print(i);
+            Serial.print(i + 1);
             Serial.print(" ");
             Serial.println(WeightBiasPtr[i]);
 
@@ -144,7 +144,7 @@ void PeripheralLoop(float *WeightBiasPtr)
       Serial.println(central.address());
 
       // while the central is still connected to peripheral:
-      int count = 1;
+      int count = 0;
       while (central.connected())
       {
 
@@ -176,7 +176,7 @@ void PeripheralLoop(float *WeightBiasPtr)
           // Print the received float value
           
           Serial.print("Receiving value: ");
-          Serial.print(count);
+          Serial.print(count + 1);
           Serial.print(" ");
           Serial.println(receivedFloat);
           WeightBiasPtr[count] = receivedFloat;
